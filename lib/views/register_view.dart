@@ -33,7 +33,7 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WELCOME!',
+        title: const Text('Sing-up',
             style: TextStyle(fontSize: 25, color: Colors.white)),
         backgroundColor: Colors.lightBlue,
       ),
@@ -57,8 +57,7 @@ class _RegisterViewState extends State<RegisterView> {
                   ),
                   TextField(
                     controller: _password,
-                    decoration:
-                        const InputDecoration(hintText: 'Enter your password'),
+                    decoration: const InputDecoration(hintText: 'Password'),
                     obscureText: true,
                   ),
                   TextField(
@@ -77,7 +76,7 @@ class _RegisterViewState extends State<RegisterView> {
                           final userCredential = await FirebaseAuth.instance
                               .createUserWithEmailAndPassword(
                                   email: email, password: password);
-                          print(userCredential);
+                          Navigator.pushNamed(context, '/verifyEmail');
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'weak-password') {
                             print('The password provided is too weak.');
@@ -95,6 +94,12 @@ class _RegisterViewState extends State<RegisterView> {
                     },
                     child: const Text('Register'),
                   ),
+                  TextButton(
+                      onPressed: () => {
+                            Navigator.pushNamedAndRemoveUntil(
+                                context, '/login', (route) => false)
+                          },
+                      child: Text('Go back to log-in')),
                 ],
               );
             default:

@@ -79,7 +79,13 @@ class _LogInViewState extends State<LogInView> {
                           }
                         }
                       },
-                      child: const Text('Log-in'))
+                      child: const Text('Log-in')),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/register');
+                    },
+                    child: const Text('Not registered yet? Click here!'),
+                  )
                 ],
               ),
             );

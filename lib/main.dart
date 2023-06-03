@@ -2,6 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mynotes/firebase_options.dart';
+import 'package:mynotes/views/logged_user_view.dart';
+import 'package:mynotes/views/login_view.dart';
+import 'package:mynotes/views/register_view.dart';
+import 'package:mynotes/views/verify_email_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +16,12 @@ void main() {
       useMaterial3: true,
     ),
     home: const HomePage(),
+    routes: {
+      '/login': (context) => const LogInView(),
+      '/register': (context) => const RegisterView(),
+      '/verifyEmail': (context) => const VerifyEmailView(),
+      '/loggedin': (context) => const LoggedUserView(),
+    },
   ));
 }
 
@@ -26,36 +36,22 @@ class HomePage extends StatelessWidget {
           options: DefaultFirebaseOptions.currentPlatform),
       builder: (BuildContext context, AsyncSnapshot<FirebaseApp> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          FirebaseAuth.instance
-              .authStateChanges() //Let's check the current user state
-              .listen((User? user) {
-            if (user != null) {
-              if (user.emailVerified) {
-                print('You are a verified user');
-              } else {
-                print('Please, verify your email');
-              }
-            }
-            /*
-            if (user?.emailVerified ?? false) {
-              print("You're a verified user");
+          final User? currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null) {
+            //refreshes the current user if signed in
+            currentUser.reload();
+            if (currentUser.emailVerified) {
+              return const LogInView(); //LoggedUserView();
             } else {
-              print("You need to verify your email first");
-            }*/
-          });
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text(
-                'Home Page',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.lightGreen,
-            ),
-          );
+              return const LogInView(); //VerifyEmailView();
+            }
+          } else {
+            return const LogInView();
+          }
         } else if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator();
         } else {
-          return const Text('error');
+          return const Text('Error loading firebase');
         }
       },
     );
