@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' show log;
+import 'package:mynotes/constants/routes.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -80,9 +81,11 @@ class _RegisterViewState extends State<RegisterView> {
                               .listen((User? user) {
                             if (user != null) {
                               if (user.emailVerified) {
-                                Navigator.pushNamed(context, '/notesView');
+                                Navigator.pushNamed(
+                                    context, myRoutes.notesView);
                               } else {
-                                Navigator.pushNamed(context, '/verifyEmail');
+                                Navigator.pushNamed(
+                                    context, myRoutes.verifyEmail);
                               }
                             }
                           });
@@ -109,7 +112,7 @@ class _RegisterViewState extends State<RegisterView> {
                   TextButton(
                       onPressed: () => {
                             Navigator.pushNamedAndRemoveUntil(
-                                context, '/login', (route) => false)
+                                context, myRoutes.loginView, (route) => false)
                           },
                       child: const Text('Go back to log-in')),
                 ],

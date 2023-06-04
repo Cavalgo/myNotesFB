@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
+import 'package:mynotes/constants/routes.dart';
 
 enum MyDropDownItems { logout, two }
 
@@ -31,16 +32,12 @@ class _NotesViewState extends State<NotesView> {
               size: 35,
             ),
             onSelected: (value) async {
-              /* Navigator.pushNamedAndRemoveUntil(
-                    context, '/login', (route) => false); */
               FirebaseAuth.instance
                   .authStateChanges()
                   .listen((User? user) async {
                 if (user == null) {
-                  // Navigator.pushNamedAndRemoveUntil(
-                  //  context, '/login', (route) => false)
                   await Navigator.pushNamedAndRemoveUntil(
-                      context, '/login', (route) => false);
+                      context, myRoutes.loginView, (route) => false);
                 }
               });
               switch (value) {

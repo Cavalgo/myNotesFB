@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' show log;
+import 'package:mynotes/constants/routes.dart';
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -64,19 +65,20 @@ class _LogInViewState extends State<LogInView> {
                   TextButton(
                       onPressed: () async {
                         FirebaseAuth.instance
+                            //Listener for user status
                             .authStateChanges()
                             .listen((User? user) async {
                           if (user != null) {
                             if (user.emailVerified) {
                               await Navigator.pushNamedAndRemoveUntil(
                                 context,
-                                '/notesView',
+                                myRoutes.notesView,
                                 (route) => false,
                               );
                             } else {
                               await Navigator.pushNamedAndRemoveUntil(
                                 context,
-                                '/verifyEmail',
+                                myRoutes.verifyEmail,
                                 (route) => false,
                               );
                             }
@@ -102,9 +104,12 @@ class _LogInViewState extends State<LogInView> {
                       child: const Text('Log-in')),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/register');
+                      Navigator.pushNamed(
+                        context,
+                        myRoutes.registerView,
+                      );
                     },
-                    child: const Text('Not registered yet? Click here!'),
+                    child: const Text('Not registered yet? Register here!'),
                   )
                 ],
               ),

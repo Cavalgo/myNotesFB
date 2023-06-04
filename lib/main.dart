@@ -6,6 +6,7 @@ import 'package:mynotes/views/notes_view.dart';
 import 'package:mynotes/views/login_view.dart';
 import 'package:mynotes/views/register_view.dart';
 import 'package:mynotes/views/verify_email_view.dart';
+import 'package:mynotes/constants/routes.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,10 +18,10 @@ void main() {
     ),
     home: const HomePage(),
     routes: {
-      '/login': (context) => const LogInView(),
-      '/register': (context) => const RegisterView(),
-      '/verifyEmail': (context) => const VerifyEmailView(),
-      '/notesView': (context) => const NotesView(),
+      myRoutes.loginView: (context) => const LogInView(),
+      myRoutes.registerView: (context) => const RegisterView(),
+      myRoutes.verifyEmail: (context) => const VerifyEmailView(),
+      myRoutes.notesView: (context) => const NotesView(),
     },
   ));
 }
