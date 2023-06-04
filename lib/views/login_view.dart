@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer' show log;
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -35,6 +36,7 @@ class _LogInViewState extends State<LogInView> {
         ),
         builder: (BuildContext context, AsyncSnapshot<FirebaseApp> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
+            FirebaseAuth.instance.currentUser?.reload();
             return Scaffold(
               appBar: AppBar(
                 title: const Text(
@@ -61,6 +63,19 @@ class _LogInViewState extends State<LogInView> {
                   ),
                   TextButton(
                       onPressed: () async {
+                        FirebaseAuth.instance
+                            .authStateChanges()
+                            .listen((User? user) async {
+                          if (user != null) {
+                            if (user.emailVerified) {
+                              await Navigator.pushNamedAndRemoveUntil(
+                                  context, '/notesView', (route) => false);
+                            } else {
+                              await Navigator.pushNamedAndRemoveUntil(
+                                  context, '/verifyEmail', (route) => false);
+                            }
+                          }
+                        });
                         final String emailUser = _email.text;
                         final String passwordUser = _password.text;
                         //We use e.runType to know what is the exception class(type)
@@ -68,14 +83,14 @@ class _LogInViewState extends State<LogInView> {
                           final credential = await FirebaseAuth.instance
                               .signInWithEmailAndPassword(
                                   email: emailUser, password: passwordUser);
-                          print(credential);
+                          log('$credential');
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'user-not-found') {
-                            print('No user found for that email.');
+                            log('No user found for that email.');
                           } else if (e.code == 'wrong-password') {
-                            print('Wrong password provided for that user.');
+                            log('Wrong password provided for that user.');
                           } else {
-                            print(e.code);
+                            log(e.code);
                           }
                         }
                       },

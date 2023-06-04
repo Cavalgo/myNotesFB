@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer' show log;
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -73,23 +74,33 @@ class _RegisterViewState extends State<RegisterView> {
                       final password2 = _password2.text;
                       if (password == password2) {
                         try {
-                          final userCredential = await FirebaseAuth.instance
+                          FirebaseAuth.instance
+                              .authStateChanges()
+                              .listen((User? user) {
+                            if (user != null) {
+                              if (user.emailVerified) {
+                                Navigator.pushNamed(context, '/notesView');
+                              } else {
+                                Navigator.pushNamed(context, '/verifyEmail');
+                              }
+                            }
+                          });
+                          await FirebaseAuth.instance
                               .createUserWithEmailAndPassword(
                                   email: email, password: password);
-                          Navigator.pushNamed(context, '/verifyEmail');
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'weak-password') {
-                            print('The password provided is too weak.');
+                            log('The password provided is too weak.');
                           } else if (e.code == 'email-already-in-use') {
-                            print('The account already exists for that email.');
+                            log('The account already exists for that email.');
                           } else if (e.code == 'invalid-email') {
-                            print("Please, enter a valid email address");
+                            log("Please, enter a valid email address");
                           } else {
-                            print(e.code);
+                            log(e.code);
                           }
                         }
                       } else {
-                        print("passwords does not coincide");
+                        log("passwords does not coincide");
                       }
                     },
                     child: const Text('Register'),
@@ -99,11 +110,11 @@ class _RegisterViewState extends State<RegisterView> {
                             Navigator.pushNamedAndRemoveUntil(
                                 context, '/login', (route) => false)
                           },
-                      child: Text('Go back to log-in')),
+                      child: const Text('Go back to log-in')),
                 ],
               );
             default:
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
           }
 
           /**

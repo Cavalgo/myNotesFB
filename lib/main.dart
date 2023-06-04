@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mynotes/firebase_options.dart';
-import 'package:mynotes/views/logged_user_view.dart';
+import 'package:mynotes/views/notes_view.dart';
 import 'package:mynotes/views/login_view.dart';
 import 'package:mynotes/views/register_view.dart';
 import 'package:mynotes/views/verify_email_view.dart';
@@ -20,7 +20,7 @@ void main() {
       '/login': (context) => const LogInView(),
       '/register': (context) => const RegisterView(),
       '/verifyEmail': (context) => const VerifyEmailView(),
-      '/loggedin': (context) => const LoggedUserView(),
+      '/notesView': (context) => const NotesView(),
     },
   ));
 }
@@ -37,16 +37,14 @@ class HomePage extends StatelessWidget {
       builder: (BuildContext context, AsyncSnapshot<FirebaseApp> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           final User? currentUser = FirebaseAuth.instance.currentUser;
-          if (currentUser != null) {
-            //refreshes the current user if signed in
-            currentUser.reload();
-            if (currentUser.emailVerified) {
-              return const LogInView(); //LoggedUserView();
-            } else {
-              return const LogInView(); //VerifyEmailView();
-            }
-          } else {
+          //si es null o false irá a LogIn View
+          if (currentUser == null) {
             return const LogInView();
+          }
+          if (currentUser.emailVerified) {
+            return const NotesView();
+          } else {
+            return const VerifyEmailView();
           }
         } else if (snapshot.connectionState == ConnectionState.waiting) {
           return const CircularProgressIndicator();
