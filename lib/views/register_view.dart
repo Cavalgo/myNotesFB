@@ -36,7 +36,7 @@ class _RegisterViewState extends State<RegisterView> {
       appBar: AppBar(
         title: const Text('Sing-up',
             style: TextStyle(fontSize: 25, color: Colors.white)),
-        backgroundColor: Colors.lightBlue,
+        backgroundColor: Colors.blue,
       ),
       body: FutureBuilder(
         future: Firebase.initializeApp(
@@ -53,12 +53,13 @@ class _RegisterViewState extends State<RegisterView> {
                     enableSuggestions: false,
                     autocorrect: false,
                     decoration: const InputDecoration(
-                      hintText: 'Enter your email',
+                      hintText: 'Enter email',
                     ),
                   ),
                   TextField(
                     controller: _password,
-                    decoration: const InputDecoration(hintText: 'Password'),
+                    decoration:
+                        const InputDecoration(hintText: 'Enter password'),
                     obscureText: true,
                   ),
                   TextField(

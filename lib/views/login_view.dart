@@ -59,7 +59,7 @@ class _LogInViewState extends State<LogInView> {
                     controller: _password,
                     obscureText: true,
                     decoration:
-                        const InputDecoration(hintText: 'Enter password'),
+                        const InputDecoration(hintText: 'Enter your password'),
                   ),
                   TextButton(
                       onPressed: () async {
@@ -69,10 +69,16 @@ class _LogInViewState extends State<LogInView> {
                           if (user != null) {
                             if (user.emailVerified) {
                               await Navigator.pushNamedAndRemoveUntil(
-                                  context, '/notesView', (route) => false);
+                                context,
+                                '/notesView',
+                                (route) => false,
+                              );
                             } else {
                               await Navigator.pushNamedAndRemoveUntil(
-                                  context, '/verifyEmail', (route) => false);
+                                context,
+                                '/verifyEmail',
+                                (route) => false,
+                              );
                             }
                           }
                         });
@@ -80,10 +86,9 @@ class _LogInViewState extends State<LogInView> {
                         final String passwordUser = _password.text;
                         //We use e.runType to know what is the exception class(type)
                         try {
-                          final credential = await FirebaseAuth.instance
+                          await FirebaseAuth.instance
                               .signInWithEmailAndPassword(
                                   email: emailUser, password: passwordUser);
-                          log('$credential');
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'user-not-found') {
                             log('No user found for that email.');
