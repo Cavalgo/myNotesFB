@@ -4,6 +4,7 @@ import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' show log;
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/utilities/my_alert_dialog.dart';
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -64,26 +65,6 @@ class _LogInViewState extends State<LogInView> {
                   ),
                   TextButton(
                       onPressed: () async {
-                        FirebaseAuth.instance
-                            //Listener for user status
-                            .authStateChanges()
-                            .listen((User? user) async {
-                          if (user != null) {
-                            if (user.emailVerified) {
-                              await Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                myRoutes.notesView,
-                                (route) => false,
-                              );
-                            } else {
-                              await Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                myRoutes.verifyEmail,
-                                (route) => false,
-                              );
-                            }
-                          }
-                        });
                         final String emailUser = _email.text;
                         final String passwordUser = _password.text;
                         //We use e.runType to know what is the exception class(type)
@@ -91,14 +72,54 @@ class _LogInViewState extends State<LogInView> {
                           await FirebaseAuth.instance
                               .signInWithEmailAndPassword(
                                   email: emailUser, password: passwordUser);
+                          //firebase listener
+                          FirebaseAuth.instance
+                              .authStateChanges()
+                              .listen((User? user) async {
+                            if (user != null) {
+                              if (user.emailVerified) {
+                                await Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  myRoutes.notesView,
+                                  (route) => false,
+                                );
+                              } else {
+                                await Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  myRoutes.verifyEmail,
+                                  (route) => false,
+                                );
+                              }
+                            }
+                          });
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'user-not-found') {
                             log('No user found for that email.');
+                            myAlert.showErrorDialog(context, 'Email not found',
+                                'If you have not signed out yet, please click register');
                           } else if (e.code == 'wrong-password') {
-                            log('Wrong password provided for that user.');
+                            myAlert.showErrorDialog(
+                                context,
+                                'Wrong password',
+                                'The password entered is invalid. If you '
+                                    'forgot your password, click on:\n Forget password?');
+                          } else if (e.code == 'invalid-email') {
+                            myAlert.showErrorDialog(context, 'Invalid email',
+                                'Please, enter a valid email');
                           } else {
-                            log(e.code);
+                            myAlert.showErrorDialog(
+                              context,
+                              'Issue with the credentials',
+                              e.code,
+                            );
                           }
+                          //here, we catch any other type of exception
+                        } catch (e) {
+                          myAlert.showErrorDialog(
+                            context,
+                            'There is an issue',
+                            e.toString(),
+                          );
                         }
                       },
                       child: const Text('Log-in')),

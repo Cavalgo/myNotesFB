@@ -4,6 +4,7 @@ import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' show log;
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/utilities/my_alert_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -76,6 +77,10 @@ class _RegisterViewState extends State<RegisterView> {
                       final password2 = _password2.text;
                       if (password == password2) {
                         try {
+                          await FirebaseAuth.instance
+                              .createUserWithEmailAndPassword(
+                                  email: email, password: password);
+                          //firebase listener on
                           FirebaseAuth.instance
                               .authStateChanges()
                               .listen((User? user) {
@@ -89,16 +94,25 @@ class _RegisterViewState extends State<RegisterView> {
                               }
                             }
                           });
-                          await FirebaseAuth.instance
-                              .createUserWithEmailAndPassword(
-                                  email: email, password: password);
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'weak-password') {
-                            log('The password provided is too weak.');
+                            myAlert.showErrorDialog(
+                              context,
+                              'Weak password',
+                              'Password should be at least 6 characters',
+                            );
                           } else if (e.code == 'email-already-in-use') {
-                            log('The account already exists for that email.');
+                            myAlert.showErrorDialog(
+                              context,
+                              'Email already in use',
+                              'The email address is already in use by another account',
+                            );
                           } else if (e.code == 'invalid-email') {
-                            log("Please, enter a valid email address");
+                            myAlert.showErrorDialog(
+                              context,
+                              'Invalid email',
+                              'The email address is badly formatted',
+                            );
                           } else {
                             log(e.code);
                           }
