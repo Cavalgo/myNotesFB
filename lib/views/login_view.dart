@@ -40,6 +40,7 @@ class _LogInViewState extends State<LogInView> {
           if (snapshot.connectionState == ConnectionState.done) {
             FirebaseAuth.instance.currentUser?.reload();
             return Scaffold(
+              backgroundColor: Colors.amber,
               appBar: AppBar(
                 title: const Text(
                   'Log-in',
@@ -69,29 +70,25 @@ class _LogInViewState extends State<LogInView> {
                         final String passwordUser = _password.text;
                         //We use e.runType to know what is the exception class(type)
                         try {
-                          await FirebaseAuth.instance
+                          final userCredential = await FirebaseAuth.instance
                               .signInWithEmailAndPassword(
                                   email: emailUser, password: passwordUser);
-                          //firebase listener
-                          FirebaseAuth.instance
-                              .authStateChanges()
-                              .listen((User? user) async {
-                            if (user != null) {
-                              if (user.emailVerified) {
-                                await Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  myRoutes.notesView,
-                                  (route) => false,
-                                );
-                              } else {
-                                await Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  myRoutes.verifyEmail,
-                                  (route) => false,
-                                );
-                              }
+                          final user = userCredential.user;
+                          if (user != null) {
+                            if (user.emailVerified) {
+                              await Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                myRoutes.notesView,
+                                (route) => false,
+                              );
+                            } else {
+                              await Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                myRoutes.verifyEmail,
+                                (route) => false,
+                              );
                             }
-                          });
+                          }
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'user-not-found') {
                             log('No user found for that email.');

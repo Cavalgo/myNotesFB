@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:developer' show log;
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/utilities/my_alert_dialog.dart';
 
@@ -77,23 +76,16 @@ class _RegisterViewState extends State<RegisterView> {
                       final password2 = _password2.text;
                       if (password == password2) {
                         try {
-                          await FirebaseAuth.instance
+                          final userCredential = await FirebaseAuth.instance
                               .createUserWithEmailAndPassword(
                                   email: email, password: password);
                           //firebase listener on
-                          FirebaseAuth.instance
-                              .authStateChanges()
-                              .listen((User? user) {
-                            if (user != null) {
-                              if (user.emailVerified) {
-                                Navigator.pushNamed(
-                                    context, myRoutes.notesView);
-                              } else {
-                                Navigator.pushNamed(
-                                    context, myRoutes.verifyEmail);
-                              }
-                            }
-                          });
+                          userCredential.user?.sendEmailVerification();
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            myRoutes.verifyEmail,
+                            (route) => false,
+                          );
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'weak-password') {
                             myAlert.showErrorDialog(
@@ -114,11 +106,18 @@ class _RegisterViewState extends State<RegisterView> {
                               'The email address is badly formatted',
                             );
                           } else {
-                            log(e.code);
+                            myAlert.showErrorDialog(
+                              context,
+                              e.code,
+                              e.toString(),
+                            );
                           }
                         }
                       } else {
-                        log("passwords does not coincide");
+                        myAlert.showErrorDialog(
+                            context,
+                            'Passwords does not match',
+                            'Plase, verify that both passwords match');
                       }
                     },
                     child: const Text('Register'),
