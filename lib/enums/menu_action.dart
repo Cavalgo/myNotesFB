@@ -1,0 +1,1 @@
+enum MenueActions { logout, two }

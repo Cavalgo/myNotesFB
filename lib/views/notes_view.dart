@@ -1,9 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mynotes/auth_manager/auth_service.dart';
 import 'dart:developer' as devtools show log;
 import 'package:mynotes/constants/routes.dart';
-
-enum MyDropDownItems { logout, two }
+import 'package:mynotes/enums/menu_action.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -13,9 +12,17 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
+  late AuthService myAuthService;
+  @override
+  void initState() {
+    myAuthService = AuthService.firebase();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepOrange,
       appBar: AppBar(
         title: const Text(
           'Main UI',
@@ -24,7 +31,7 @@ class _NotesViewState extends State<NotesView> {
         ),
         backgroundColor: Colors.blue,
         actions: <Widget>[
-          PopupMenuButton<MyDropDownItems>(
+          PopupMenuButton<MenueActions>(
             padding: const EdgeInsets.only(right: 25.0),
             icon: const Icon(
               Icons.more_horiz,
@@ -32,35 +39,29 @@ class _NotesViewState extends State<NotesView> {
               size: 35,
             ),
             onSelected: (value) async {
-              FirebaseAuth.instance
-                  .authStateChanges()
-                  .listen((User? user) async {
-                if (user == null) {
-                  await Navigator.pushNamedAndRemoveUntil(
-                      context, myRoutes.loginView, (route) => false);
-                }
-              });
               switch (value) {
-                case MyDropDownItems.logout:
+                case MenueActions.logout:
                   final userDecision = await showLogOutDialog(context);
                   devtools.log(userDecision.toString());
                   if (userDecision) {
-                    await FirebaseAuth.instance.signOut();
+                    await myAuthService.logOut();
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, myRoutes.loginView, (route) => false);
                   }
                   break;
-                case MyDropDownItems.two:
+                case MenueActions.two:
                   devtools.log('two');
                   break;
               }
             },
             itemBuilder: (BuildContext context) =>
-                <PopupMenuItem<MyDropDownItems>>[
-              const PopupMenuItem<MyDropDownItems>(
-                value: MyDropDownItems.logout,
+                <PopupMenuItem<MenueActions>>[
+              const PopupMenuItem<MenueActions>(
+                value: MenueActions.logout,
                 child: Text('Log out'),
               ),
-              const PopupMenuItem<MyDropDownItems>(
-                value: MyDropDownItems.two,
+              const PopupMenuItem<MenueActions>(
+                value: MenueActions.two,
                 child: Text('Item 2'),
               ),
             ],
@@ -93,5 +94,6 @@ Future<bool> showLogOutDialog(BuildContext context) {
         ],
       );
     },
-  ).then((value) => value ?? false);
+  ).then((value) =>
+      value ?? false); //Sii no es null lo retorna, si es null, retorna falso
 }

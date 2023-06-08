@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mynotes/auth_manager/auth_exceptions.dart';
+import 'package:mynotes/auth_manager/auth_service.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mynotes/constants/routes.dart';
@@ -33,6 +35,8 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
+    //Auth service
+    AuthService myAuthService = AuthService.firebase();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sing-up',
@@ -40,9 +44,7 @@ class _RegisterViewState extends State<RegisterView> {
         backgroundColor: Colors.blue,
       ),
       body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
+        future: myAuthService.initialize(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
@@ -72,52 +74,31 @@ class _RegisterViewState extends State<RegisterView> {
                   TextButton(
                     onPressed: () async {
                       final email = _email.text;
-                      final password = _password.text;
+                      final password1 = _password.text;
                       final password2 = _password2.text;
-                      if (password == password2) {
-                        try {
-                          final userCredential = await FirebaseAuth.instance
-                              .createUserWithEmailAndPassword(
-                                  email: email, password: password);
-                          //firebase listener on
-                          userCredential.user?.sendEmailVerification();
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            myRoutes.verifyEmail,
-                            (route) => false,
-                          );
-                        } on FirebaseAuthException catch (e) {
-                          if (e.code == 'weak-password') {
-                            myAlert.showErrorDialog(
+                      try {
+                        await myAuthService.createUser(
+                          email: email,
+                          password1: password1,
+                          password2: password2,
+                        );
+                        //Send email verification
+                        await myAuthService.sendEmailVerification();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          myRoutes.verifyEmail,
+                          (route) => false,
+                        );
+                      } catch (e) {
+                        if (e is MyExceptions) {
+                          myAlert.showErrorDialog(
+                              context, e.reason, e.description);
+                        } else {
+                          myAlert.showErrorDialog(
                               context,
-                              'Weak password',
-                              'Password should be at least 6 characters',
-                            );
-                          } else if (e.code == 'email-already-in-use') {
-                            myAlert.showErrorDialog(
-                              context,
-                              'Email already in use',
-                              'The email address is already in use by another account',
-                            );
-                          } else if (e.code == 'invalid-email') {
-                            myAlert.showErrorDialog(
-                              context,
-                              'Invalid email',
-                              'The email address is badly formatted',
-                            );
-                          } else {
-                            myAlert.showErrorDialog(
-                              context,
-                              e.code,
-                              e.toString(),
-                            );
-                          }
+                              GenericAuthException().reason,
+                              GenericAuthException().description);
                         }
-                      } else {
-                        myAlert.showErrorDialog(
-                            context,
-                            'Passwords does not match',
-                            'Plase, verify that both passwords match');
                       }
                     },
                     child: const Text('Register'),

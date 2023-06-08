@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:mynotes/firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:developer' show log;
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/utilities/my_alert_dialog.dart';
+import 'package:mynotes/auth_manager/auth_service.dart';
+import 'package:mynotes/auth_manager/auth_exceptions.dart';
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -32,13 +30,15 @@ class _LogInViewState extends State<LogInView> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<FirebaseApp>(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
-        builder: (BuildContext context, AsyncSnapshot<FirebaseApp> snapshot) {
+    //We intilize the
+    AuthService myAuthService = AuthService.firebase();
+    return FutureBuilder(
+        future: myAuthService.initialize(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            FirebaseAuth.instance.currentUser?.reload();
+            () async {
+              await myAuthService.reloadUser();
+            };
             return Scaffold(
               backgroundColor: Colors.amber,
               appBar: AppBar(
@@ -66,57 +66,34 @@ class _LogInViewState extends State<LogInView> {
                   ),
                   TextButton(
                       onPressed: () async {
-                        final String emailUser = _email.text;
-                        final String passwordUser = _password.text;
-                        //We use e.runType to know what is the exception class(type)
+                        final String userEmail = _email.text;
+                        final String userPassword = _password.text;
                         try {
-                          final userCredential = await FirebaseAuth.instance
-                              .signInWithEmailAndPassword(
-                                  email: emailUser, password: passwordUser);
-                          final user = userCredential.user;
-                          if (user != null) {
-                            if (user.emailVerified) {
-                              await Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                myRoutes.notesView,
-                                (route) => false,
-                              );
-                            } else {
-                              await Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                myRoutes.verifyEmail,
-                                (route) => false,
-                              );
-                            }
-                          }
-                        } on FirebaseAuthException catch (e) {
-                          if (e.code == 'user-not-found') {
-                            log('No user found for that email.');
-                            myAlert.showErrorDialog(context, 'Email not found',
-                                'If you have not signed out yet, please click register');
-                          } else if (e.code == 'wrong-password') {
-                            myAlert.showErrorDialog(
-                                context,
-                                'Wrong password',
-                                'The password entered is invalid. If you '
-                                    'forgot your password, click on:\n Forget password?');
-                          } else if (e.code == 'invalid-email') {
-                            myAlert.showErrorDialog(context, 'Invalid email',
-                                'Please, enter a valid email');
-                          } else {
-                            myAlert.showErrorDialog(
+                          final currentUser = await myAuthService.logIn(
+                              email: userEmail, password: userPassword);
+                          if (currentUser.isEmailVerfied) {
+                            await Navigator.pushNamedAndRemoveUntil(
                               context,
-                              'Issue with the credentials',
-                              e.code,
+                              myRoutes.notesView,
+                              (route) => false,
+                            );
+                          } else {
+                            await Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              myRoutes.verifyEmail,
+                              (route) => false,
                             );
                           }
-                          //here, we catch any other type of exception
                         } catch (e) {
-                          myAlert.showErrorDialog(
-                            context,
-                            'There is an issue',
-                            e.toString(),
-                          );
+                          if (e is MyExceptions) {
+                            myAlert.showErrorDialog(
+                                context, e.reason, e.description);
+                          } else {
+                            myAlert.showErrorDialog(
+                                context,
+                                GenericAuthException().reason,
+                                GenericAuthException().description);
+                          }
                         }
                       },
                       child: const Text('Log-in')),

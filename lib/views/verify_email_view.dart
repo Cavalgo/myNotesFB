@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mynotes/auth_manager/auth_service.dart';
 import 'package:mynotes/constants/routes.dart';
 
 //Timer:
@@ -17,15 +17,17 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   late Timer verifiedEmailTimer;
   late Timer changeEnableTimer;
   late bool enabled;
+  late AuthService myAuthService;
   @override
   void initState() {
+    myAuthService = AuthService.firebase();
     enabled = false;
     // TODO: implement initState
     verifiedEmailTimer =
-        Timer.periodic(const Duration(seconds: 3), (verifiedEmailTimer) {
-      FirebaseAuth.instance.currentUser?.reload();
-      User? cUser = FirebaseAuth.instance.currentUser;
-      if (cUser?.emailVerified ?? false) {
+        Timer.periodic(const Duration(seconds: 3), (verifiedEmailTimer) async {
+      await myAuthService.reloadUser();
+      final cUser = myAuthService.currentUser;
+      if (cUser?.isEmailVerfied ?? false) {
         verifiedEmailTimer.cancel();
         Navigator.pushNamedAndRemoveUntil(
             context, myRoutes.notesView, (route) => false);
@@ -56,17 +58,16 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   }
 
   sendEmailFunction() {
-    print('object');
     if (enabled) {
       log('Retunrn fuction');
-      return () {
+      return () async {
         log('you cclikeccd');
         setEnabledTimer();
         setState(() {
           enabled = false;
         });
         log('email should be sent');
-        //await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+        await myAuthService.sendEmailVerification();
       };
     } else {
       log('I didt Retunrn fuction');
@@ -87,7 +88,7 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           children: [
             const Text('We\'ve sent you a verification email, please verify'),
             Text(
-                'Please, check your email: ${FirebaseAuth.instance.currentUser?.email}'),
+                'Please, check your email: ${myAuthService.currentUser?.userEmail ?? ''}'),
             ElevatedButton(
               onPressed: sendEmailFunction(),
               child: const Text('Re-send email verification!'),
