@@ -8,11 +8,11 @@ class AuthUser {
   final String userEmail;
 
   //Constructor privaddo
-  const AuthUser._(this.isEmailVerfied, this.userEmail);
+  const AuthUser({required this.isEmailVerfied, required this.userEmail});
 
   //Esto es lo que llamamos y recibe un usuario
   factory AuthUser.fromFirebase(User user) {
     final String userEmail = user.email ?? '';
-    return AuthUser._(user.emailVerified, userEmail);
+    return AuthUser(isEmailVerfied: user.emailVerified, userEmail: userEmail);
   }
 }
