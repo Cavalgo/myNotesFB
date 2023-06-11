@@ -1,8 +1,8 @@
 import 'dart:developer';
 
-import 'package:mynotes/auth_manager/auth_exceptions.dart';
-import 'package:mynotes/auth_manager/auth_provider.dart';
-import 'package:mynotes/auth_manager/auth_user.dart';
+import 'package:mynotes/services/auth/auth_exceptions.dart';
+import 'package:mynotes/services/auth/auth_provider.dart';
+import 'package:mynotes/services/auth/auth_user.dart';
 import 'package:test/test.dart';
 
 class NotInitializedException implements Exception {

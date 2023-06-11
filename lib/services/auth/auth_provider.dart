@@ -2,7 +2,7 @@
 Auth provider getter, gets the current user
 
 */
-import 'package:mynotes/auth_manager/auth_user.dart';
+import 'package:mynotes/services/auth/auth_user.dart';
 
 abstract class AuthProvider {
   AuthUser? get currentUser;
