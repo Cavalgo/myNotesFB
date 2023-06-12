@@ -4,6 +4,8 @@ import 'dart:developer' as devtools show log;
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/enums/menu_action.dart';
 
+import '../services/crud/notes_service.dart';
+
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
 
@@ -12,22 +14,39 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
-  late AuthService myAuthService;
+  late AuthService _myAuthService;
+  late NotesService _myNoteService;
+  late Future<DataBaseUser> _myDbUser;
   @override
   void initState() {
-    myAuthService = AuthService.firebase();
+    _myAuthService = AuthService.firebase();
+    _myNoteService = NotesService(); //Singletone
+
+    _myDbUser = _myNoteService.getOrCreateUser(
+        email: _myAuthService.currentUser!.userEmail!);
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    //When the widget is taken out from the widget tree, then it will relase memory
+    _myNoteService.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepOrange,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Main UI',
           style: TextStyle(
-              color: Colors.white, fontSize: 30, fontWeight: FontWeight.w500),
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         backgroundColor: Colors.blue,
         actions: <Widget>[
@@ -44,9 +63,12 @@ class _NotesViewState extends State<NotesView> {
                   final userDecision = await showLogOutDialog(context);
                   devtools.log(userDecision.toString());
                   if (userDecision) {
-                    await myAuthService.logOut();
+                    await _myAuthService.logOut();
                     Navigator.pushNamedAndRemoveUntil(
-                        context, myRoutes.loginView, (route) => false);
+                      context,
+                      myRoutes.loginView,
+                      (route) => false,
+                    );
                   }
                   break;
                 case MenueActions.two:
@@ -68,7 +90,27 @@ class _NotesViewState extends State<NotesView> {
           ),
         ],
       ),
-      body: const Text('Welcome to your notes!'),
+      body: FutureBuilder(
+        future: _myDbUser,
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              return StreamBuilder(
+                stream: _myNoteService.allNotes,
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return Text('Waiting for notes');
+                    default:
+                      return const CircularProgressIndicator();
+                  }
+                },
+              );
+            default:
+              return CircularProgressIndicator();
+          }
+        },
+      ),
     );
   }
 }
