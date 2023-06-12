@@ -4,7 +4,7 @@ import 'dart:developer' as devtools show log;
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/enums/menu_action.dart';
 
-import '../services/crud/notes_service.dart';
+import '../../services/crud/notes_service.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -17,6 +17,7 @@ class _NotesViewState extends State<NotesView> {
   late AuthService _myAuthService;
   late NotesService _myNoteService;
   late Future<DataBaseUser> _myDbUser;
+  //** INItSTATE **/
   @override
   void initState() {
     _myAuthService = AuthService.firebase();
@@ -41,7 +42,7 @@ class _NotesViewState extends State<NotesView> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'Main UI',
+          'Notes',
           style: TextStyle(
             color: Colors.white,
             fontSize: 30,
@@ -50,8 +51,21 @@ class _NotesViewState extends State<NotesView> {
         ),
         backgroundColor: Colors.blue,
         actions: <Widget>[
+          IconButton(
+              padding: const EdgeInsets.only(right: 20),
+              onPressed: () async {
+                await Navigator.pushNamed(
+                  context,
+                  myRoutes.addNewNoteView,
+                );
+              },
+              icon: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 33,
+              )),
           PopupMenuButton<MenueActions>(
-            padding: const EdgeInsets.only(right: 25.0),
+            padding: const EdgeInsets.only(right: 20.0),
             icon: const Icon(
               Icons.more_horiz,
               color: Colors.white,

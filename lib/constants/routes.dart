@@ -11,5 +11,6 @@ class _MyRoutes {
   final loginView = '/login';
   final registerView = '/register';
   final verifyEmail = '/verifyEmail';
-  final notesView = 'notesView';
+  final notesView = '/notesView';
+  final addNewNoteView = '/newNoteView';
 }
