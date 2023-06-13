@@ -17,7 +17,7 @@ class _NotesViewState extends State<NotesView> {
   late AuthService _myAuthService;
   late NotesService _myNoteService;
   late Future<DataBaseUser> _myDbUser;
-  //** INItSTATE **/
+  //** INITSTATE **/
   @override
   void initState() {
     _myAuthService = AuthService.firebase();
@@ -114,14 +114,17 @@ class _NotesViewState extends State<NotesView> {
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
-                      return Text('Waiting for notes');
+                      return const Text('Waiting for notes');
+                    //return const CircularProgressIndicator();
+                    case ConnectionState.active:
+                      return const Text('Waiting for notes');
                     default:
                       return const CircularProgressIndicator();
                   }
                 },
               );
             default:
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
           }
         },
       ),
