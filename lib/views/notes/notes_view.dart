@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'dart:developer' as devtools show log;
@@ -23,17 +25,11 @@ class _NotesViewState extends State<NotesView> {
     _myAuthService = AuthService.firebase();
     _myNoteService = NotesService(); //Singletone
 
+    //Creating a Future variable
     _myDbUser = _myNoteService.getOrCreateUser(
         email: _myAuthService.currentUser!.userEmail!);
 
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    //When the widget is taken out from the widget tree, then it will relase memory
-    _myNoteService.close();
-    super.dispose();
   }
 
   @override
@@ -110,21 +106,42 @@ class _NotesViewState extends State<NotesView> {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
               return StreamBuilder(
-                stream: _myNoteService.allNotes,
+                stream: _myNoteService.allNotesStream,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
-                      return const Text('Waiting for notes');
+                      return const Center(child: CircularProgressIndicator());
                     //return const CircularProgressIndicator();
                     case ConnectionState.active:
-                      return const Text('Waiting for notes');
+                      if (snapshot.hasData) {
+                        final allNotes = snapshot.data as List<DataBaseNote>;
+                        return ListView.builder(
+                          itemCount: allNotes.length,
+                          itemBuilder: (context, int index) {
+                            final note = allNotes[index];
+                            return ListTile(
+                              title: Text(
+                                note.text,
+                                maxLines: 1,
+                                softWrap: true,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () {
+                                _myNoteService.deleteNote(id: note.id);
+                              },
+                            );
+                          },
+                        );
+                      } else {
+                        return const Center(child: CircularProgressIndicator());
+                      }
                     default:
-                      return const CircularProgressIndicator();
+                      return const Center(child: CircularProgressIndicator());
                   }
                 },
               );
             default:
-              return const CircularProgressIndicator();
+              return const Center(child: CircularProgressIndicator());
           }
         },
       ),

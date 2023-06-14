@@ -96,7 +96,7 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
                   const InputDecoration(hintText: 'Write your note here...'),
             );
           } else {
-            return const CircularProgressIndicator();
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),

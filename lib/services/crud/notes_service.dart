@@ -17,13 +17,22 @@ and then, for each operation it goes to the database
 class NotesService {
   my_db.Database? _db;
   List<DataBaseNote> _notes = [];
-  final _notesStreamController =
-      StreamController<List<DataBaseNote>>.broadcast();
+  //Broadcast: - It is intended for individual messages that can be handled one at a time.
+  late final StreamController<List<DataBaseNote>> _notesStreamController;
 
-  Stream<List<DataBaseNote>> get allNotes => _notesStreamController.stream;
+  Stream<List<DataBaseNote>> get allNotesStream =>
+      _notesStreamController.stream;
 
 //SingleTone creation
-  NotesService._shareInstance();
+  NotesService._shareInstance() {
+    _notesStreamController = StreamController<List<DataBaseNote>>.broadcast(
+        //onListen is called whenever a new listener suscribes to our notesStreamController
+        onListen: () {
+      //sink is the destination of the data, so when a new suscriber is
+      //suscribing, it will send it all the current notes _notes
+      _notesStreamController.sink.add(_notes);
+    });
+  }
   static final NotesService _shared = NotesService._shareInstance();
   factory NotesService() => _shared;
 
@@ -156,9 +165,7 @@ class NotesService {
     await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
     //For security reasons
-    final myUser;
-    myUser = await getUser(email: owner.email);
-
+    final myUser = await getUser(email: owner.email);
     if (myUser != owner) {
       throw UserNotFoundException();
     }
