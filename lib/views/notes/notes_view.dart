@@ -1,10 +1,10 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'dart:developer' as devtools show log;
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/enums/menu_action.dart';
+import 'package:mynotes/utilities/dialogs/log_out_dialog.dart';
+import 'package:mynotes/views/notes/notes_list_view.dart';
 
 import '../../services/crud/notes_service.dart';
 
@@ -52,7 +52,7 @@ class _NotesViewState extends State<NotesView> {
               onPressed: () async {
                 await Navigator.pushNamed(
                   context,
-                  myRoutes.addNewNoteView,
+                  MyRoutes.addNewNoteView,
                 );
               },
               icon: const Icon(
@@ -70,13 +70,15 @@ class _NotesViewState extends State<NotesView> {
             onSelected: (value) async {
               switch (value) {
                 case MenueActions.logout:
-                  final userDecision = await showLogOutDialog(context);
+                  final userDecision = await logOutDialog(
+                    context: context,
+                  );
                   devtools.log(userDecision.toString());
                   if (userDecision) {
                     await _myAuthService.logOut();
                     Navigator.pushNamedAndRemoveUntil(
                       context,
-                      myRoutes.loginView,
+                      MyRoutes.loginView,
                       (route) => false,
                     );
                   }
@@ -111,27 +113,14 @@ class _NotesViewState extends State<NotesView> {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
                       return const Center(child: CircularProgressIndicator());
-                    //return const CircularProgressIndicator();
                     case ConnectionState.active:
                       if (snapshot.hasData) {
                         final allNotes = snapshot.data as List<DataBaseNote>;
-                        return ListView.builder(
-                          itemCount: allNotes.length,
-                          itemBuilder: (context, int index) {
-                            final note = allNotes[index];
-                            return ListTile(
-                              title: Text(
-                                note.text,
-                                maxLines: 1,
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () {
-                                _myNoteService.deleteNote(id: note.id);
-                              },
-                            );
-                          },
-                        );
+                        return NotesListView(
+                            notes: allNotes,
+                            onDeleteNote: (DataBaseNote note) {
+                              _myNoteService.deleteNote(id: note.id);
+                            });
                       } else {
                         return const Center(child: CircularProgressIndicator());
                       }
@@ -147,29 +136,4 @@ class _NotesViewState extends State<NotesView> {
       ),
     );
   }
-}
-
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog<bool>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Sign out'),
-        content: const Text('Are you sure you want yo sign out?'),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text('Cancel')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Log out'))
-        ],
-      );
-    },
-  ).then((value) =>
-      value ?? false); //Sii no es null lo retorna, si es null, retorna falso
 }

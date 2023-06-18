@@ -5,12 +5,10 @@
       '/notesView': (context) => const NotesView(),
 */
 
-final myRoutes = _MyRoutes();
-
-class _MyRoutes {
-  final loginView = '/login';
-  final registerView = '/register';
-  final verifyEmail = '/verifyEmail';
-  final notesView = '/notesView';
-  final addNewNoteView = '/newNoteView';
+class MyRoutes {
+  static const String loginView = '/login';
+  static const String registerView = '/register';
+  static const String verifyEmail = '/verifyEmail';
+  static const String notesView = '/notesView';
+  static const String addNewNoteView = '/newNoteView';
 }

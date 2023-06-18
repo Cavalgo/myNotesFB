@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mynotes/constants/routes.dart';
-import 'package:mynotes/utilities/my_alert_dialog.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/auth/auth_exceptions.dart';
+
+import '../utilities/dialogs/error_dialog.dart';
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -74,22 +75,21 @@ class _LogInViewState extends State<LogInView> {
                           if (currentUser.isEmailVerfied) {
                             await Navigator.pushNamedAndRemoveUntil(
                               context,
-                              myRoutes.notesView,
+                              MyRoutes.notesView,
                               (route) => false,
                             );
                           } else {
                             await Navigator.pushNamedAndRemoveUntil(
                               context,
-                              myRoutes.verifyEmail,
+                              MyRoutes.verifyEmail,
                               (route) => false,
                             );
                           }
                         } catch (e) {
                           if (e is MyExceptions) {
-                            myAlert.showErrorDialog(
-                                context, e.reason, e.description);
+                            showErrorDialog(context, e.reason, e.description);
                           } else {
-                            myAlert.showErrorDialog(
+                            showErrorDialog(
                                 context,
                                 GenericAuthException().reason,
                                 GenericAuthException().description);
@@ -101,7 +101,7 @@ class _LogInViewState extends State<LogInView> {
                     onPressed: () {
                       Navigator.pushNamed(
                         context,
-                        myRoutes.registerView,
+                        MyRoutes.registerView,
                       );
                     },
                     child: const Text('Not registered yet? Register here!'),

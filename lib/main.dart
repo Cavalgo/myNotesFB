@@ -18,11 +18,11 @@ void main() {
     ),
     home: const ViewStarter(),
     routes: {
-      myRoutes.loginView: (context) => const LogInView(),
-      myRoutes.registerView: (context) => const RegisterView(),
-      myRoutes.verifyEmail: (context) => const VerifyEmailView(),
-      myRoutes.notesView: (context) => const NotesView(),
-      myRoutes.addNewNoteView: (context) => const AddNewNoteView(),
+      MyRoutes.loginView: (context) => const LogInView(),
+      MyRoutes.registerView: (context) => const RegisterView(),
+      MyRoutes.verifyEmail: (context) => const VerifyEmailView(),
+      MyRoutes.notesView: (context) => const NotesView(),
+      MyRoutes.addNewNoteView: (context) => const AddNewNoteView(),
     },
   ));
 }

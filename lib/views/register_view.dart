@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_exceptions.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/constants/routes.dart';
-import 'package:mynotes/utilities/my_alert_dialog.dart';
+import '../utilities/dialogs/error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -83,15 +83,14 @@ class _RegisterViewState extends State<RegisterView> {
                         await myAuthService.sendEmailVerification();
                         Navigator.pushNamedAndRemoveUntil(
                           context,
-                          myRoutes.verifyEmail,
+                          MyRoutes.verifyEmail,
                           (route) => false,
                         );
                       } catch (e) {
                         if (e is MyExceptions) {
-                          myAlert.showErrorDialog(
-                              context, e.reason, e.description);
+                          showErrorDialog(context, e.reason, e.description);
                         } else {
-                          myAlert.showErrorDialog(
+                          showErrorDialog(
                               context,
                               GenericAuthException().reason,
                               GenericAuthException().description);
@@ -103,7 +102,7 @@ class _RegisterViewState extends State<RegisterView> {
                   TextButton(
                       onPressed: () => {
                             Navigator.pushNamedAndRemoveUntil(
-                                context, myRoutes.loginView, (route) => false)
+                                context, MyRoutes.loginView, (route) => false)
                           },
                       child: const Text('Go back to log-in')),
                 ],

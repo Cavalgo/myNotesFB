@@ -34,7 +34,9 @@ class NotesService {
     });
   }
   static final NotesService _shared = NotesService._shareInstance();
-  factory NotesService() => _shared;
+  factory NotesService() {
+    return _shared;
+  }
 
   Future<void> _catchNotes() async {
     await _ensureDbIsOpen();

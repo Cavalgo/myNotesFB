@@ -30,7 +30,7 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
       if (cUser?.isEmailVerfied ?? false) {
         verifiedEmailTimer.cancel();
         Navigator.pushNamedAndRemoveUntil(
-            context, myRoutes.notesView, (route) => false);
+            context, MyRoutes.notesView, (route) => false);
       }
     });
     setEnabledTimer();
@@ -97,7 +97,7 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
                 onPressed: () async {
                   verifiedEmailTimer.cancel();
                   await Navigator.pushNamedAndRemoveUntil(
-                      context, myRoutes.loginView, (route) => false);
+                      context, MyRoutes.loginView, (route) => false);
                 },
                 child: const Text('go back to log-in')),
           ],
