@@ -52,7 +52,7 @@ class _NotesViewState extends State<NotesView> {
               onPressed: () async {
                 await Navigator.pushNamed(
                   context,
-                  MyRoutes.addNewNoteView,
+                  MyRoutes.createUpdateNoteView,
                 );
               },
               icon: const Icon(
@@ -117,10 +117,16 @@ class _NotesViewState extends State<NotesView> {
                       if (snapshot.hasData) {
                         final allNotes = snapshot.data as List<DataBaseNote>;
                         return NotesListView(
-                            notes: allNotes,
-                            onDeleteNote: (DataBaseNote note) {
-                              _myNoteService.deleteNote(id: note.id);
-                            });
+                          notes: allNotes,
+                          onDeleteNote: (DataBaseNote note) {
+                            _myNoteService.deleteNote(id: note.id);
+                          },
+                          onTapNote: (note) async {
+                            await Navigator.pushNamed(
+                                context, MyRoutes.updateNoteView,
+                                arguments: note);
+                          },
+                        );
                       } else {
                         return const Center(child: CircularProgressIndicator());
                       }

@@ -2,28 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
 
-class AddNewNoteView extends StatefulWidget {
-  const AddNewNoteView({super.key});
+class CreateNoteView extends StatefulWidget {
+  const CreateNoteView({super.key});
 
   @override
-  State<AddNewNoteView> createState() => _AddNewNoteViewState();
+  State<CreateNoteView> createState() => _CreateUpdateNoteView();
 }
 
-class _AddNewNoteViewState extends State<AddNewNoteView> {
+class _CreateUpdateNoteView extends State<CreateNoteView> {
   DataBaseNote? _note;
+  late final Future createNoteAndGetUserFuture;
   late final NotesService _notesService;
   late final TextEditingController _textController;
+  String? initialText;
 
-  Future<DataBaseNote> createNewNote() async {
-    final existingNote = _note;
-    if (existingNote != null) {
-      return existingNote;
-    }
+  Future<void> createNoteAndGetUser() async {
     final currentUserEmail = AuthService.firebase().currentUser!.userEmail;
     DataBaseUser owener = await _notesService.getUser(email: currentUserEmail!);
     final note = await _notesService.createNote(owner: owener);
     _note = note;
-    return note;
   }
 
   void _deleteNoteIfEmpty() async {
@@ -36,7 +33,7 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
   void _saveNoteIfTextNotEmpty() async {
     final note = _note;
     final text = _textController.text;
-    if (note != null && text.isNotEmpty) {
+    if (note != null && text.isNotEmpty && text != initialText) {
       await _notesService.updateNote(note: note, text: text);
     }
   }
@@ -44,6 +41,8 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
   @override
   void initState() {
     _textController = TextEditingController();
+    createNoteAndGetUserFuture = createNoteAndGetUser();
+
     _notesService = NotesService();
     super.initState();
   }
@@ -73,6 +72,7 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
 
   @override
   Widget build(BuildContext context) {
+    //Here we are getting the arguments we passed from List view
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -82,11 +82,9 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
         backgroundColor: Colors.blue,
       ),
       body: FutureBuilder(
-        future: createNewNote(),
+        future: createNoteAndGetUserFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            final note = snapshot.data as DataBaseNote;
-            _note = note;
             _setUpTextControllerListener();
             return TextField(
               controller: _textController,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_exceptions.dart';
@@ -44,6 +45,7 @@ class NotesService {
     try {
       final allNotes = await getAllNotes();
       _notes = allNotes;
+
       _notesStreamController.add(_notes);
     } on NoteDoesNotExistException {
       _notesStreamController.add(_notes);
@@ -63,7 +65,6 @@ class NotesService {
     }
   }
 
-//We might need to fix this
   Future<DataBaseNote> updateNote(
       {required DataBaseNote note, required String text}) async {
     await _ensureDbIsOpen();
@@ -80,22 +81,21 @@ class NotesService {
       {
         textColumn: text,
         isSyncWithCloudColumn: 0,
+        lastModifiedDateColumn: DateTime.now().toString(),
       },
       where: '$idColumn = ?',
       whereArgs: [note.id],
     );
     if (numberOfChanges == 0) {
+      log('hello');
       throw CouldNotUpdateNoteException();
     }
     //19:57
-    int noteIndex = _notes.indexOf(note);
     final updatedNote = await getNote(id: note.id);
-    if (noteIndex != -1) {
-      _notes.remove(note);
-      _notes.insert(noteIndex, updatedNote);
-    } else {
-      _notes.add(updatedNote);
-    }
+
+    _notes.remove(note);
+    _notes.insert(0, updatedNote);
+    _notesStreamController.add(_notes);
 
     return updatedNote;
   }
@@ -128,6 +128,11 @@ class NotesService {
     }
     final notesIterable = allNotes.map((e) => DataBaseNote.fromRow(e));
     final notesList = notesIterable.toList();
+    notesList.sort((nota1, nota2) {
+      DateTime date1 = nota1.lastModifiedDate;
+      DateTime date2 = nota2.lastModifiedDate;
+      return date2.compareTo(date1);
+    });
     return notesList;
   }
 
@@ -137,7 +142,6 @@ class NotesService {
     final myNoteList = await db.query(
       noteTable,
       limit: 1,
-      columns: [idColumn, userIDColumn, textColumn],
       where: '$idColumn = ?',
       whereArgs: [id],
     );
@@ -145,10 +149,10 @@ class NotesService {
       throw NoteDoesNotExistException();
     }
     DataBaseNote myNote = DataBaseNote.fromRow(myNoteList.first);
-    _notes.removeWhere((note) => note.id == id);
+    //_notes.removeWhere((note) => note.id == id);
     //Question: Doesn't it change its original place in the list?
-    _notes.add(myNote);
-    _notesStreamController.add(_notes);
+    //_notes.insert(0, myNote);
+    //_notesStreamController.add(_notes);
     return myNote;
   }
 
@@ -193,6 +197,7 @@ class NotesService {
       userIDColumn: owner.id,
       textColumn: text,
       isSyncWithCloudColumn: 1,
+      lastModifiedDateColumn: DateTime.now().toString(),
     });
     if (id == 0) {
       throw UnableToInsertNoteException();
@@ -202,6 +207,7 @@ class NotesService {
       userID: owner.id,
       text: text,
       isSyncWithCloud: true,
+      lastModifiedDate: DateTime.now(),
     );
     _notes.add(myNote);
     _notesStreamController.add(_notes);
@@ -362,42 +368,6 @@ class DataBaseUser {
 
   @override
   int get hashCode => id.hashCode;
-
-/*
-  @override
-  bool operator == (Object other) {
-    if (other is DataBaseUser) {
-      return other.id == id;
-    } else {
-      return false;
-    }
-  }*/
-
-/**** 
-CREATE TABLE "user" (
-	"id"	INTEGER NOT NULL,
-	"email"	TEXT NOT NULL UNIQUE,
-	PRIMARY KEY("id" AUTOINCREMENT)
-);
-
-  Every user in the dabase table user will be represented as:
-  Map<String, Object?> <-- This is a row
-
-
-
-Map<String, Object?>:
-- String is 
-
-
-//The key (String) represnts the column name and the Object its value
-
-  Map<String, Object?> person = {
-    'name': 'John',
-    'age': 30,
-    'isEmployed': true,
-    'address': null,
-  };
-*****/
 }
 
 @immutable
@@ -406,22 +376,26 @@ class DataBaseNote {
   final int userID;
   final String text;
   final bool isSyncWithCloud;
+  final DateTime lastModifiedDate;
 
   const DataBaseNote(
       {required this.id,
       required this.userID,
       required this.text,
-      required this.isSyncWithCloud});
+      required this.isSyncWithCloud,
+      required this.lastModifiedDate});
 
   DataBaseNote.fromRow(Map<String, Object?> map)
       : id = map[idColumn] as int,
         userID = map[userIDColumn] as int,
         text = map[textColumn] as String,
+        lastModifiedDate =
+            DateTime.parse(map[lastModifiedDateColumn] as String),
         isSyncWithCloud = (map[isSyncWithCloudColumn]) == 1 ? true : false;
   @override
   String toString() {
     String note =
-        '$idColumn: $id. $userIDColumn: $userID. $isSyncWithCloudColumn: $isSyncWithCloud $textColumn';
+        '$idColumn: $id. $userIDColumn: $userID.$lastModifiedDateColumn: $lastModifiedDate. $isSyncWithCloudColumn: $isSyncWithCloud $textColumn';
     return note;
   }
 
@@ -432,15 +406,4 @@ class DataBaseNote {
 
   @override
   int get hashCode => id.hashCode;
-
-  /* 
-  CREATE TABLE "note" (
-	"id"	INTEGER NOT NULL,
-	"user_id"	INTEGER NOT NULL,
-	"text"	TEXT,
-	"is_sync_with_cloud"	INTEGER NOT NULL DEFAULT 0,
-	PRIMARY KEY("id" AUTOINCREMENT),
-	FOREIGN KEY("user_id") REFERENCES "user"("id")
-);
-  */
 }
