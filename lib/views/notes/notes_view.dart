@@ -27,9 +27,14 @@ class _NotesViewState extends State<NotesView> {
 
     //Creating a Future variable
     _myDbUser = _myNoteService.getOrCreateUser(
-        email: _myAuthService.currentUser!.userEmail!);
+        userEmail: _myAuthService.currentUser!.userEmail!);
 
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -115,6 +120,7 @@ class _NotesViewState extends State<NotesView> {
                       return const Center(child: CircularProgressIndicator());
                     case ConnectionState.active:
                       if (snapshot.hasData) {
+                        devtools.log(snapshot.hasData.toString());
                         final allNotes = snapshot.data as List<DataBaseNote>;
                         return NotesListView(
                           notes: allNotes,

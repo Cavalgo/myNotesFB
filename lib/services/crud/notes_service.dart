@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_exceptions.dart';
 import 'package:sqflite/sqflite.dart' as my_db;
@@ -17,6 +15,7 @@ and then, for each operation it goes to the database
 
 class NotesService {
   my_db.Database? _db;
+  DataBaseUser? _user;
   List<DataBaseNote> _notes = [];
   //Broadcast: - It is intended for individual messages that can be handled one at a time.
   late final StreamController<List<DataBaseNote>> _notesStreamController;
@@ -26,12 +25,14 @@ class NotesService {
 
 //SingleTone creation
   NotesService._shareInstance() {
+    _notes = [];
     _notesStreamController = StreamController<List<DataBaseNote>>.broadcast(
         //onListen is called whenever a new listener suscribes to our notesStreamController
         onListen: () {
       //sink is the destination of the data, so when a new suscriber is
       //suscribing, it will send it all the current notes _notes
       _notesStreamController.sink.add(_notes);
+      open();
     });
   }
   static final NotesService _shared = NotesService._shareInstance();
@@ -40,7 +41,6 @@ class NotesService {
   }
 
   Future<void> _catchNotes() async {
-    await _ensureDbIsOpen();
     /* This is getting all notes in the table, maybe good to change it to all notes from user*/
     try {
       final allNotes = await getAllNotes();
@@ -52,13 +52,19 @@ class NotesService {
     }
   }
 
-  Future<DataBaseUser> getOrCreateUser({required String email}) async {
-    await _ensureDbIsOpen();
+  Future<DataBaseUser> getOrCreateUser({required String userEmail}) async {
+    if (_db == null) {
+      await open();
+    }
     try {
-      final user = await getUser(email: email);
+      final user = await getUser(email: userEmail);
+      _user = user;
+      await _catchNotes();
       return user;
     } on UserNotFoundException {
-      return await createUser(email: email);
+      DataBaseUser user = await createUser(email: userEmail);
+      _user = user;
+      return user;
     } catch (e) {
       // this helps to add a breakpoint in here, in case it's necessary to debug the app
       rethrow;
@@ -67,7 +73,6 @@ class NotesService {
 
   Future<DataBaseNote> updateNote(
       {required DataBaseNote note, required String text}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
 //Optional try catch. Just so that you are aware that the method get note will throw an exception if note not-found. Remember, in this case we don't need to rethrow it as it would do it automatically
     try {
@@ -87,7 +92,6 @@ class NotesService {
       whereArgs: [note.id],
     );
     if (numberOfChanges == 0) {
-      log('hello');
       throw CouldNotUpdateNoteException();
     }
     //19:57
@@ -100,29 +104,14 @@ class NotesService {
     return updatedNote;
   }
 
-  Future<List<DataBaseNote>> getAllNotesUser(DataBaseUser owner) async {
-    await _ensureDbIsOpen();
+  Future<List<DataBaseNote>> getAllNotes() async {
     final db = _getDatabaseorThrow();
 
     List<Map<String, Object?>> allNotes = await db.query(
       noteTable,
       where: '$userIDColumn = ?',
-      whereArgs: [owner.id],
+      whereArgs: [_user!.id],
     );
-    if (allNotes.isEmpty) {
-      throw NoteDoesNotExistException();
-    }
-
-    final notesIterable = allNotes.map((e) => DataBaseNote.fromRow(e));
-    final notesList = notesIterable.toList();
-    return notesList;
-  }
-
-  Future<List<DataBaseNote>> getAllNotes() async {
-    await _ensureDbIsOpen();
-    final db = _getDatabaseorThrow();
-
-    List<Map<String, Object?>> allNotes = await db.query(noteTable);
     if (allNotes.isEmpty) {
       throw NoteDoesNotExistException();
     }
@@ -137,7 +126,6 @@ class NotesService {
   }
 
   Future<DataBaseNote> getNote({required int id}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
     final myNoteList = await db.query(
       noteTable,
@@ -156,19 +144,7 @@ class NotesService {
     return myNote;
   }
 
-  Future<int> deleteAllNotes() async {
-    await _ensureDbIsOpen();
-    my_db.Database db = _getDatabaseorThrow();
-    int affectedRows = await db.delete(noteTable);
-    if (affectedRows != 0) {
-      _notes = [];
-      _notesStreamController.add(_notes);
-    }
-    return affectedRows;
-  }
-
   Future<int> deleteAllNotesOfUser({required DataBaseUser owner}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
     //For security reasons
     final myUser = await getUser(email: owner.email);
@@ -184,7 +160,6 @@ class NotesService {
   }
 
   Future<DataBaseNote> createNote({required DataBaseUser owner}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
     //Check if the user exits
     final dbUser = await getUser(email: owner.email);
@@ -216,7 +191,6 @@ class NotesService {
   }
 
   Future<void> deleteNote({required int id}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
     int affectedRows = await db.delete(
       noteTable,
@@ -233,8 +207,8 @@ class NotesService {
   }
 
   Future<DataBaseUser> getUser({required String email}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
+
     email = email.toLowerCase();
     final myUserList = await db.query(
       userTable,
@@ -250,7 +224,6 @@ class NotesService {
   }
 
   Future<DataBaseUser> createUser({required String email}) async {
-    await _ensureDbIsOpen();
     email = email.toLowerCase();
     final db = _getDatabaseorThrow();
     final results = await db.query(
@@ -273,7 +246,6 @@ class NotesService {
   }
 
   Future<void> deleteUser({required String email}) async {
-    await _ensureDbIsOpen();
     final db = _getDatabaseorThrow();
     final int deleteCount = await db.delete(
       userTable,
@@ -297,7 +269,6 @@ class NotesService {
   }
 
   Future<void> close() async {
-    await _ensureDbIsOpen();
     final db = _db;
     if (db == null) {
       throw DatabaseIsNotOpenedException(
@@ -306,14 +277,6 @@ class NotesService {
 
     await db.close();
     _db = null;
-  }
-
-  Future<void> _ensureDbIsOpen() async {
-    try {
-      await open();
-    } on DatabaseAlreadyOpenedException {
-      //empty
-    }
   }
 
   Future<void> open() async {
@@ -332,8 +295,8 @@ class NotesService {
       db.execute(createUserTableCommand);
       //Create note table
       db.execute(createNoteTableCommand);
+
       //We are gettin all the notes from out database in _notes for the stream
-      await _catchNotes();
     } catch (e) {
       /* throw MissingPlatformDirectoryException(
         'Unable to get application documents directory'); */

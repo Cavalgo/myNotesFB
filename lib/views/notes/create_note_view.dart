@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
@@ -11,7 +13,7 @@ class CreateNoteView extends StatefulWidget {
 
 class _CreateUpdateNoteView extends State<CreateNoteView> {
   DataBaseNote? _note;
-  late final Future createNoteAndGetUserFuture;
+  late final Function createNoteAndGetUserFuture;
   late final NotesService _notesService;
   late final TextEditingController _textController;
   String? initialText;
@@ -20,10 +22,14 @@ class _CreateUpdateNoteView extends State<CreateNoteView> {
     final currentUserEmail = AuthService.firebase().currentUser!.userEmail;
     DataBaseUser owener = await _notesService.getUser(email: currentUserEmail!);
     final note = await _notesService.createNote(owner: owener);
+    log('created note');
+    log(note.toString());
     _note = note;
   }
 
   void _deleteNoteIfEmpty() async {
+    log('HELLO WORLD!');
+    log(_note.toString());
     final note = _note;
     if (_textController.text.isEmpty && note != null) {
       await _notesService.deleteNote(id: note.id);
@@ -41,7 +47,9 @@ class _CreateUpdateNoteView extends State<CreateNoteView> {
   @override
   void initState() {
     _textController = TextEditingController();
-    createNoteAndGetUserFuture = createNoteAndGetUser();
+    createNoteAndGetUserFuture = () {
+      createNoteAndGetUser();
+    };
 
     _notesService = NotesService();
     super.initState();
@@ -82,7 +90,7 @@ class _CreateUpdateNoteView extends State<CreateNoteView> {
         backgroundColor: Colors.blue,
       ),
       body: FutureBuilder(
-        future: createNoteAndGetUserFuture,
+        future: createNoteAndGetUser(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             _setUpTextControllerListener();
