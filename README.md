@@ -56,7 +56,7 @@ For a complete list of dependencies, refer to the `pubspec.yaml` file.
 
 ## Screenshots
 
-![MyNotes App Screenshot 1](screenshots/screenshot_1.jpeg)
+![MyNotes App Screenshot 1](screenshots/screenshot_1.png)
 ![MyNotes App Screenshot 2](screenshots/screenshot_2.png)
 ![MyNotes App Screenshot 3](screenshots/screenshot_3.png)
 
