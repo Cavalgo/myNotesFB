@@ -1,4 +1,4 @@
-# MyNotes App - Flutter Note Taking App
+# MyNotes App - With FireBase (FireStore)
 
 ![MyNotes App Logo](app_logo.png)
 
