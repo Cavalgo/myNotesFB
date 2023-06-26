@@ -60,14 +60,6 @@ For a complete list of dependencies, refer to the `pubspec.yaml` file.
 ![MyNotes App Screenshot 2](screenshots/ss2.png)
 ![MyNotes App Screenshot 2](screenshots/ss3.png)
 
-## Contributing
-
-Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request. Let's make MyNotes App even better together.
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for more information.
-
 ---
 
 Take quick notes with MyNotes App and keep your thoughts organized. Start using MyNotes App today!
