@@ -147,7 +147,8 @@ class MockAuthProvider implements AuthProvider {
     if (!email.contains('@')) {
       throw InvalidEmailException();
     }
-    _user = AuthUser(isEmailVerfied: false, userEmail: email);
+    _user =
+        AuthUser(isEmailVerfied: false, userEmail: email, userId: 'idGeneric');
     return Future.value(_user);
   }
 
@@ -178,6 +179,9 @@ class MockAuthProvider implements AuthProvider {
       throw UserNotFoundException();
     }
 
-    _user = AuthUser(isEmailVerfied: true, userEmail: _user!.userEmail);
+    _user = AuthUser(
+        isEmailVerfied: true,
+        userEmail: _user!.userEmail,
+        userId: 'userIdGeneric');
   }
 }

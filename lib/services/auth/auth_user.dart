@@ -5,14 +5,22 @@ import 'package:flutter/foundation.dart';
 @immutable
 class AuthUser {
   final bool isEmailVerfied;
-  final String? userEmail;
+  final String userEmail;
+  final String userId;
 
   //Constructor privaddo
-  const AuthUser({required this.isEmailVerfied, required this.userEmail});
+  const AuthUser({
+    required this.isEmailVerfied,
+    required this.userEmail,
+    required this.userId,
+  });
 
   //Esto es lo que llamamos y recibe un usuario
   factory AuthUser.fromFirebase(User user) {
-    final String? userEmail = user.email;
-    return AuthUser(isEmailVerfied: user.emailVerified, userEmail: userEmail);
+    return AuthUser(
+      isEmailVerfied: user.emailVerified,
+      userEmail: user.email!,
+      userId: user.uid,
+    );
   }
 }

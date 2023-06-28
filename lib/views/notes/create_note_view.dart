@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
@@ -20,16 +18,12 @@ class _CreateUpdateNoteView extends State<CreateNoteView> {
 
   Future<void> createNoteAndGetUser() async {
     final currentUserEmail = AuthService.firebase().currentUser!.userEmail;
-    DataBaseUser owener = await _notesService.getUser(email: currentUserEmail!);
+    DataBaseUser owener = await _notesService.getUser(email: currentUserEmail);
     final note = await _notesService.createNote(owner: owener);
-    log('created note');
-    log(note.toString());
     _note = note;
   }
 
   void _deleteNoteIfEmpty() async {
-    log('HELLO WORLD!');
-    log(_note.toString());
     final note = _note;
     if (_textController.text.isEmpty && note != null) {
       await _notesService.deleteNote(id: note.id);

@@ -27,7 +27,7 @@ class _NotesViewState extends State<NotesView> {
 
     //Creating a Future variable
     _myDbUser = _myNoteService.getOrCreateUser(
-        userEmail: _myAuthService.currentUser!.userEmail!);
+        userEmail: _myAuthService.currentUser!.userEmail);
 
     super.initState();
   }
@@ -108,6 +108,7 @@ class _NotesViewState extends State<NotesView> {
         ],
       ),
       body: FutureBuilder(
+        //We get or create user and also we initilize our steam and get our notes
         future: _myDbUser,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
