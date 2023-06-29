@@ -121,7 +121,6 @@ class _NotesViewState extends State<NotesView> {
                       return const Center(child: CircularProgressIndicator());
                     case ConnectionState.active:
                       if (snapshot.hasData) {
-                        devtools.log(snapshot.hasData.toString());
                         final allNotes = snapshot.data as List<DataBaseNote>;
                         return NotesListView(
                           notes: allNotes,
