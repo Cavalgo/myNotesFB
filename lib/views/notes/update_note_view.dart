@@ -3,6 +3,8 @@ import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/cloud/firebase_provider.dart';
 import 'package:mynotes/services/cloud/firestore_constants.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
+import 'package:mynotes/utilities/dialogs/cannot_share_empty_note_dialog.dart';
+import 'package:share_plus/share_plus.dart';
 import 'get_argument.dart';
 import 'package:mynotes/services/cloud/firestore_note.dart';
 
@@ -52,7 +54,30 @@ class _UpdateNoteViewState extends State<UpdateNoteView> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Update Note'),
+        backgroundColor: Colors.blue,
+        title: const Text(
+          'Update Note',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        actions: <Widget>[
+          Container(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              onPressed: () async {
+                String text = _noteController.text;
+                if (text.isEmpty) {
+                  await cannotShareEmptyNoteDialog(context);
+                } else {
+                  Share.share(text);
+                }
+              },
+              icon: const Icon(Icons.share),
+              color: Colors.white,
+            ),
+          )
+        ],
       ),
       body: TextField(
         decoration: const InputDecoration(hintText: 'Write your note here'),

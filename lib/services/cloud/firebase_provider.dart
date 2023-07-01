@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mynotes/services/cloud/firestore_constants.dart';
 import 'package:mynotes/services/cloud/firestore_exceptions.dart';
@@ -59,6 +57,31 @@ class FirestoreProvider {
           documentId: newNoteDocument.id,
           ownerUserId: ownerUserId,
           text: '',
+          lastDateModified: Timestamp.now());
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<FirestoreNote> createNewNoteWithText({
+    required String ownerUserId,
+    required String text,
+  }) async {
+    try {
+      DocumentReference<Map<String, dynamic>> newNoteReference =
+          await notes.add({
+        ownerUserIdFieldName: ownerUserId,
+        textFieldName: text,
+        lastModifiedDateFieldName: DateTime.now(),
+      });
+
+      DocumentSnapshot<Map<String, dynamic>> newNoteDocument =
+          await newNoteReference.get();
+
+      return FirestoreNote(
+          documentId: newNoteDocument.id,
+          ownerUserId: ownerUserId,
+          text: text,
           lastDateModified: Timestamp.now());
     } catch (e) {
       throw Exception(e.toString());

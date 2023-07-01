@@ -86,10 +86,6 @@ class _NotesViewState extends State<NotesView> {
                       (route) => false,
                     );
                   }
-                  break;
-                case MenueActions.two:
-                  devtools.log('two');
-                  break;
               }
             },
             itemBuilder: (BuildContext context) =>
@@ -97,10 +93,6 @@ class _NotesViewState extends State<NotesView> {
               const PopupMenuItem<MenueActions>(
                 value: MenueActions.logout,
                 child: Text('Log out'),
-              ),
-              const PopupMenuItem<MenueActions>(
-                value: MenueActions.two,
-                child: Text('Item 2'),
               ),
             ],
           ),

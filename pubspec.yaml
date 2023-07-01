@@ -42,6 +42,8 @@ dependencies:
   sqflite: ^2.2.8+4
   path: ^1.8.3
   path_provider: ^2.0.15
+  #Share plus is used to share notes in the app.  A Flutter plugin to share content from your Flutter app via the platform's share dialog.
+  share_plus: ^7.0.2
 
 dev_dependencies:
   flutter_test:
