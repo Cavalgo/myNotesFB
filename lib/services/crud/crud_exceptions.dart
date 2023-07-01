@@ -1,3 +1,4 @@
+/*
 class DatabaseAlreadyOpenedException implements Exception {
   final String message;
   DatabaseAlreadyOpenedException(this.message);
@@ -54,3 +55,4 @@ class UnableToInsertNoteException implements Exception {}
 class NoteDoesNotExistException implements Exception {}
 
 class CouldNotUpdateNoteException implements Exception {}
+*/

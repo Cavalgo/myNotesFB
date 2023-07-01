@@ -1,3 +1,12 @@
+
+
+
+
+
+
+
+
+/*
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_exceptions.dart';
@@ -370,3 +379,4 @@ class DataBaseNote {
   @override
   int get hashCode => id.hashCode;
 }
+*/

@@ -3,10 +3,10 @@ import 'package:mynotes/services/auth/auth_service.dart';
 import 'dart:developer' as devtools show log;
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/enums/menu_action.dart';
+import 'package:mynotes/services/cloud/firebase_provider.dart';
+import 'package:mynotes/services/cloud/firestore_note.dart';
 import 'package:mynotes/utilities/dialogs/log_out_dialog.dart';
 import 'package:mynotes/views/notes/notes_list_view.dart';
-
-import '../../services/crud/notes_service.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -17,17 +17,16 @@ class NotesView extends StatefulWidget {
 
 class _NotesViewState extends State<NotesView> {
   late AuthService _myAuthService;
-  late NotesService _myNoteService;
-  late Future<DataBaseUser> _myDbUser;
-  //** INITSTATE **/
+  late FirestoreProvider _myFirestoreProvider;
+
   @override
   void initState() {
     _myAuthService = AuthService.firebase();
-    _myNoteService = NotesService(); //Singletone
+    _myFirestoreProvider = FirestoreProvider.instance; //Singletone
 
     //Creating a Future variable
-    _myDbUser = _myNoteService.getOrCreateUser(
-        userEmail: _myAuthService.currentUser!.userEmail);
+    // _myDbUser = _myFirestoreProvider.getOrCreateUser(
+    //    userEmail: _myAuthService.currentUser!.userEmail);
 
     super.initState();
   }
@@ -107,40 +106,32 @@ class _NotesViewState extends State<NotesView> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        //We get or create user and also we initilize our steam and get our notes
-        future: _myDbUser,
+      body: StreamBuilder(
+        stream: _myFirestoreProvider.allNotes(
+            ownerUserID: _myAuthService.currentUser!.userId),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return StreamBuilder(
-                stream: _myNoteService.allNotesStream,
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                      return const Center(child: CircularProgressIndicator());
-                    case ConnectionState.active:
-                      if (snapshot.hasData) {
-                        final allNotes = snapshot.data as List<DataBaseNote>;
-                        return NotesListView(
-                          notes: allNotes,
-                          onDeleteNote: (DataBaseNote note) {
-                            _myNoteService.deleteNote(id: note.id);
-                          },
-                          onTapNote: (note) async {
-                            await Navigator.pushNamed(
-                                context, MyRoutes.updateNoteView,
-                                arguments: note);
-                          },
-                        );
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    default:
-                      return const Center(child: CircularProgressIndicator());
-                  }
-                },
-              );
+            case ConnectionState.waiting:
+            case ConnectionState.active:
+              devtools.log('Connection is active');
+              if (snapshot.hasData) {
+                final allNotes = snapshot.data as List<FirestoreNote>;
+                allNotes.sort(
+                    (a, b) => b.lastDateModified.compareTo(a.lastDateModified));
+                return NotesListView(
+                  notes: allNotes,
+                  onDeleteNote: (FirestoreNote note) {
+                    _myFirestoreProvider.deleteNote(
+                        documentId: note.documentId);
+                  },
+                  onTapNote: (FirestoreNote note) async {
+                    await Navigator.pushNamed(context, MyRoutes.updateNoteView,
+                        arguments: note);
+                  },
+                );
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
             default:
               return const Center(child: CircularProgressIndicator());
           }
