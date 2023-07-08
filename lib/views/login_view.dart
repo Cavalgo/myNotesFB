@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/constants/routes.dart';
-import 'package:mynotes/services/auth/auth_service.dart';
-import 'package:mynotes/services/auth/auth_exceptions.dart';
-
-import '../utilities/dialogs/error_dialog.dart';
+import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
+import 'package:mynotes/services/auth/bloc/auth_event.dart';
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -31,89 +30,51 @@ class _LogInViewState extends State<LogInView> {
 
   @override
   Widget build(BuildContext context) {
-    //We intilize the
-    AuthService myAuthService = AuthService.firebase();
-    return FutureBuilder(
-        future: myAuthService.initialize(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            () async {
-              await myAuthService.reloadUser();
-            };
-            return Scaffold(
-              backgroundColor: Colors.amber,
-              appBar: AppBar(
-                title: const Text(
-                  'Log-in',
-                  style: TextStyle(color: Colors.white, fontSize: 30),
-                ),
-                backgroundColor: Colors.blue,
-              ),
-              body: ListView(
-                children: [
-                  TextField(
-                    controller: _email,
-                    decoration:
-                        const InputDecoration(hintText: 'Enter your email'),
-                    keyboardType: TextInputType.emailAddress,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                  ),
-                  TextField(
-                    controller: _password,
-                    obscureText: true,
-                    decoration:
-                        const InputDecoration(hintText: 'Enter your password'),
-                  ),
-                  TextButton(
-                      onPressed: () async {
-                        final String userEmail = _email.text;
-                        final String userPassword = _password.text;
-                        try {
-                          final currentUser = await myAuthService.logIn(
-                              email: userEmail, password: userPassword);
-                          if (currentUser.isEmailVerfied) {
-                            await Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              MyRoutes.notesView,
-                              (route) => false,
-                            );
-                          } else {
-                            await Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              MyRoutes.verifyEmail,
-                              (route) => false,
-                            );
-                          }
-                        } catch (e) {
-                          if (e is MyExceptions) {
-                            showErrorDialog(context, e.reason, e.description);
-                          } else {
-                            showErrorDialog(
-                                context,
-                                GenericAuthException().reason,
-                                GenericAuthException().description);
-                          }
-                        }
-                      },
-                      child: const Text('Log-in')),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        MyRoutes.registerView,
-                      );
-                    },
-                    child: const Text('Not registered yet? Register here!'),
-                  )
-                ],
-              ),
-            );
-          } else if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else {
-            return const Text('error');
-          }
-        });
+    return Scaffold(
+      backgroundColor: Colors.amber,
+      appBar: AppBar(
+        title: const Text(
+          'Log-in',
+          style: TextStyle(color: Colors.white, fontSize: 30),
+        ),
+        backgroundColor: Colors.blue,
+      ),
+      body: ListView(
+        children: [
+          TextField(
+            controller: _email,
+            decoration: const InputDecoration(hintText: 'Enter your email'),
+            keyboardType: TextInputType.emailAddress,
+            enableSuggestions: false,
+            autocorrect: false,
+          ),
+          TextField(
+            controller: _password,
+            obscureText: true,
+            decoration: const InputDecoration(hintText: 'Enter your password'),
+          ),
+          TextButton(
+              onPressed: () {
+                final String email = _email.text;
+                final String password = _password.text;
+/***################    LOG-IN EVENT     ##################***/
+                BlocProvider.of<AuthBloc>(context).add(AuthEventLogIn(
+                  email: email,
+                  password: password,
+                ));
+              },
+              child: const Text('Log-in')),
+          TextButton(
+            onPressed: () async {
+              await Navigator.pushNamed(
+                context,
+                MyRoutes.registerView,
+              );
+            },
+            child: const Text('Not registered yet? Register here!'),
+          )
+        ],
+      ),
+    );
   }
 }

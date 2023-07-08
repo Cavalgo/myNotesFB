@@ -6,6 +6,7 @@ class AuthService implements AuthProvider {
   final AuthProvider provider;
   AuthService(this.provider);
 
+  //Dependecy Injection
   factory AuthService.firebase() => AuthService(FirebaseAuthProvider());
 
   @override

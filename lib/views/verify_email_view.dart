@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
+import 'package:mynotes/services/auth/bloc/auth_event.dart';
+import 'package:mynotes/services/auth/bloc/auth_state.dart';
 
 //Timer:
 //https://www.flutterbeads.com/flutter-countdown-timer/#:~:text=Steps%20to%20add%20countdown%20timer,()%20to%20stop%20the%20timer.
@@ -18,29 +22,18 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   late Timer changeEnableTimer;
   late bool enabled;
   late AuthService myAuthService;
+  late AuthBloc myAuthBloc;
   @override
   void initState() {
+    /*** FB Service ***/
     myAuthService = AuthService.firebase();
     enabled = false;
-    // TODO: implement initState
-    verifiedEmailTimer =
-        Timer.periodic(const Duration(seconds: 3), (verifiedEmailTimer) async {
-      await myAuthService.reloadUser();
-      final cUser = myAuthService.currentUser;
-      if (cUser?.isEmailVerfied ?? false) {
-        verifiedEmailTimer.cancel();
-        Navigator.pushNamedAndRemoveUntil(
-            context, MyRoutes.notesView, (route) => false);
-      }
-    });
     setEnabledTimer();
-
     super.initState();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     verifiedEmailTimer;
     changeEnableTimer;
     enabled;
@@ -48,7 +41,6 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   }
 
   setEnabledTimer() {
-    //Timer 2
     changeEnableTimer = Timer(const Duration(seconds: 30), () {
       setState(() {
         enabled = true;
@@ -59,50 +51,64 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
 
   sendEmailFunction() {
     if (enabled) {
-      log('Retunrn fuction');
       return () async {
-        log('you cclikeccd');
         setEnabledTimer();
         setState(() {
           enabled = false;
         });
-        log('email should be sent');
         await myAuthService.sendEmailVerification();
       };
     } else {
-      log('I didt Retunrn fuction');
       return null;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.amber,
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text('Verify email'),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            const Text('We\'ve sent you a verification email, please verify'),
-            Text(
-                'Please, check your email: ${myAuthService.currentUser?.userEmail ?? ''}'),
-            ElevatedButton(
-              onPressed: sendEmailFunction(),
-              child: const Text('Re-send email verification!'),
+    myAuthBloc = AuthBloc(myAuthService);
+    verifiedEmailTimer =
+        Timer.periodic(const Duration(seconds: 3), (verifiedEmailTimer) async {
+      myAuthBloc.add(AuthEventCheckEmailVerified());
+    });
+    return BlocProvider(
+      create: (context) => myAuthBloc,
+      lazy: false,
+      child: Scaffold(
+          backgroundColor: Colors.amber,
+          appBar: AppBar(
+            backgroundColor: Colors.blue,
+            title: const Text('Verify email'),
+          ),
+          body: BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) async {
+              log('Recieving the state');
+              if (state is AuthStateLoggedIn) {
+                await Navigator.pushNamedAndRemoveUntil(
+                    context, MyRoutes.notesView, (route) => false);
+              }
+            },
+            child: Center(
+              child: Column(
+                children: [
+                  const Text(
+                      'We\'ve sent you a verification email, please verify'),
+                  Text(
+                      'Please, check your email: ${myAuthService.currentUser?.userEmail ?? ''}'),
+                  ElevatedButton(
+                    onPressed: sendEmailFunction(),
+                    child: const Text('Re-send email verification!'),
+                  ),
+                  TextButton(
+                      onPressed: () async {
+                        verifiedEmailTimer.cancel();
+                        await Navigator.pushNamedAndRemoveUntil(
+                            context, MyRoutes.loginView, (route) => false);
+                      },
+                      child: const Text('go back to log-in')),
+                ],
+              ),
             ),
-            TextButton(
-                onPressed: () async {
-                  verifiedEmailTimer.cancel();
-                  await Navigator.pushNamedAndRemoveUntil(
-                      context, MyRoutes.loginView, (route) => false);
-                },
-                child: const Text('go back to log-in')),
-          ],
-        ),
-      ),
+          )),
     );
   }
 }

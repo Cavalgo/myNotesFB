@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/cloud/firestore_note.dart';
-import 'package:mynotes/services/crud/notes_service.dart';
 import 'package:mynotes/utilities/dialogs/delete_note_dialog.dart';
 
 //When we want to pass a function as an argument

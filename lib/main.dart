@@ -1,8 +1,9 @@
-import 'package:bloc/bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
+import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
+import 'package:mynotes/services/auth/bloc/auth_event.dart';
+import 'package:mynotes/services/auth/bloc/auth_state.dart';
 import 'package:mynotes/views/notes/create_note_view.dart';
 import 'package:mynotes/views/notes/notes_view.dart';
 import 'package:mynotes/views/login_view.dart';
@@ -13,13 +14,17 @@ import 'package:mynotes/constants/routes.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  AuthService myAuthService = AuthService.firebase();
   runApp(MaterialApp(
     title: 'Flutter Demo',
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       useMaterial3: true,
     ),
-    home: const HomePage(),
+    home: BlocProvider(
+      create: (context) => AuthBloc(myAuthService),
+      child: const HomePage(),
+    ),
     routes: {
       MyRoutes.loginView: (context) => const LogInView(),
       MyRoutes.registerView: (context) => const RegisterView(),
@@ -30,40 +35,32 @@ void main() {
     },
   ));
 }
-/*
-class HomePage extends StatefulWidget {
+
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  AuthService myAuthService = AuthService.firebase();
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: myAuthService.initialize(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          final User? currentUser = FirebaseAuth.instance.currentUser;
-          //si es null o false irá a LogIn View
-          if (currentUser?.emailVerified ?? false) {
-            return const NotesView();
-          } else {
-            return const LogInView();
-          }
-        } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else {
-          return const Text('Error loading firebase');
-        }
-      },
-    );
+    return BlocBuilder<AuthBloc, AuthState>(
+        builder: (BuildContext context, AuthState state) {
+      BlocProvider.of<AuthBloc>(context).add(const AuthEventInitialize());
+      if (state is AuthStateLoading) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (state is AuthStateLoggedIn) {
+        return const NotesView();
+      } else if (state is AuthStateLoggedOut) {
+        return const LogInView();
+      } else if (state is AuthStateNeedsVerification) {
+        return const VerifyEmailView();
+      } else {
+        return const Center(child: CircularProgressIndicator());
+      }
+    });
   }
 }
-*/
+
+/*
+// ***************************LEARNING_BLOC***************************
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -105,7 +102,7 @@ class _HomePageState extends State<HomePage> {
                 (state is CounterStateInvalidValue) ? state.invalidValue : '';
             return Column(
               children: <Widget>[
-                Text("Current value => ${state.value}"),
+                Text("Current value -> ${state.value}"),
                 Visibility(
                   visible: state is CounterStateInvalidValue,
                   child: Text("Invalid input: $invalidValue"),
@@ -127,16 +124,20 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        CounterBloc myCounter = context.read<CounterBloc>();
-                        myCounter.add(IncrementEvent(_myController.text));
+                        BlocProvider.of<CounterBloc>(context)
+                            .add(IncrementEvent(_myController.text));
+                        //context.read<CounterBloc>().add(DecrementEvent(_myController.text));
                       },
                       child: const Text('Increase'),
                     ),
                     const SizedBox(width: 20.0),
                     ElevatedButton(
                       onPressed: () {
-                        CounterBloc myCounter = context.read<CounterBloc>();
-                        myCounter.add(DecrementEvent(_myController.text));
+                        BlocProvider.of<CounterBloc>(context)
+                            .add(DecrementEvent(_myController.text));
+                        context
+                            .read<CounterBloc>()
+                            .add(DecrementEvent(_myController.text));
                       },
                       child: const Text('Decrease'),
                     ),
@@ -216,3 +217,5 @@ class CounterBloc extends Bloc<CounterEvent, CounterState> {
     });
   }
 }
+
+*/
