@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:bloc/bloc.dart';
 import 'package:mynotes/services/auth/auth_provider.dart';
 import 'package:mynotes/services/auth/auth_user.dart';
@@ -12,7 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await myProvider.initialize();
       final AuthUser? user = myProvider.currentUser;
       if (user == null) {
-        emit(const AuthStateLoggedOut());
+        emit(const AuthStateLoggedOut(null));
       } else if (user.isEmailVerfied) {
         emit(AuthStateLoggedIn(user));
       } else {
@@ -20,7 +18,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
     on<AuthEventLogIn>((event, emit) async {
-      emit(const AuthStateLoading());
       try {
         String email = event.email;
         String password = event.password;
@@ -35,10 +32,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       } catch (e) {
         if (e is Exception) {
-          emit(AuthStateLoginFailure(e));
+          emit(AuthStateLoggedOut(e));
         } else {
           Exception exception = Exception(e.toString());
-          emit(AuthStateLoginFailure(exception));
+          emit(AuthStateLoggedOut(exception));
         }
       }
     });
@@ -64,13 +61,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthStateLoading());
       try {
         await myProvider.logOut();
-        emit(const AuthStateLoggedOut());
+        emit(const AuthStateLoggedOut(null));
       } catch (e) {
         if (e is Exception) {
-          emit(AuthStateLoginFailure(e));
+          emit(AuthStateLoggedOut(e));
         } else {
           Exception exception = Exception(e.toString());
-          emit(AuthStateLoginFailure(exception));
+          emit(AuthStateLoggedOut(exception));
         }
       }
     });
@@ -78,10 +75,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthStateLoading());
       await myProvider.reloadUser();
       if (myProvider.currentUser?.isEmailVerfied ?? false) {
-        log('listo bien hecho');
         emit(AuthStateLoggedIn(myProvider.currentUser!));
       } else {
-        log('listo no verificado');
         emit(const AuthStateNeedsVerification());
       }
     });

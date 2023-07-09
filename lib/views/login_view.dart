@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/services/auth/auth_exceptions.dart';
 import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
 import 'package:mynotes/services/auth/bloc/auth_event.dart';
+import 'package:mynotes/services/auth/bloc/auth_state.dart';
+import 'package:mynotes/utilities/dialogs/error_dialog.dart';
 
 class LogInView extends StatefulWidget {
   const LogInView({super.key});
@@ -53,7 +56,27 @@ class _LogInViewState extends State<LogInView> {
             obscureText: true,
             decoration: const InputDecoration(hintText: 'Enter your password'),
           ),
-          TextButton(
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) async {
+/*####################.  LISTENER LOGIN EXCEPTIONS    ######################*/
+              if (state is AuthStateLoggedOut && state.exception != null) {
+                if (state.exception is MyExceptions) {
+                  MyExceptions myE = state.exception as MyExceptions;
+                  await showErrorDialog(
+                    context,
+                    myE.reason,
+                    myE.description,
+                  );
+                } else {
+                  await showErrorDialog(
+                    context,
+                    GenericAuthException().reason,
+                    state.exception.toString(),
+                  );
+                }
+              }
+            },
+            child: TextButton(
               onPressed: () {
                 final String email = _email.text;
                 final String password = _password.text;
@@ -63,7 +86,9 @@ class _LogInViewState extends State<LogInView> {
                   password: password,
                 ));
               },
-              child: const Text('Log-in')),
+              child: const Text('Log-in'),
+            ),
+          ),
           TextButton(
             onPressed: () async {
               await Navigator.pushNamed(
@@ -78,3 +103,28 @@ class _LogInViewState extends State<LogInView> {
     );
   }
 }
+
+/**
+ * 
+ * 
+ BlocListener<AuthBloc, AuthState>(
+  /*#################### LISTENER TO HANDLE LOGIN EXCEPTIONS ######################*/
+      listener: (context, state) {
+        if (state is AuthStateLoggedOut && state.exception != null) {
+          if (state.exception is MyExceptions) {
+            MyExceptions myE = state.exception as MyExceptions;
+            showErrorDialog(
+              context,
+              myE.reason,
+              myE.description,
+            );
+          } else {
+            showErrorDialog(
+              context,
+              GenericAuthException().reason,
+              state.exception.toString(),
+            );
+          }
+        }
+      }, 
+ */
