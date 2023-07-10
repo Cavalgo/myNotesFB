@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/cloud/firebase_provider.dart';
-import 'package:mynotes/services/cloud/firestore_constants.dart';
-import 'package:mynotes/services/crud/notes_service.dart';
 import 'package:mynotes/utilities/dialogs/cannot_share_empty_note_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 import 'get_argument.dart';
@@ -50,7 +48,7 @@ class _UpdateNoteViewState extends State<UpdateNoteView> {
       _noteController.text = _myInitialNoteText;
     } else {
       Navigator.pushNamedAndRemoveUntil(
-          context, MyRoutes.createUpdateNoteView, (route) => false);
+          context, MyRoutes.createNoteView, (route) => false);
     }
     return Scaffold(
       appBar: AppBar(

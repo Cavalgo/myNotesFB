@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show immutable;
 import 'package:mynotes/services/auth/auth_user.dart';
+import 'package:equatable/equatable.dart';
 
 //Immutable makes the instance of a class immutable
 //Meaning that once it's declare you cannot modify it
@@ -8,25 +9,32 @@ abstract class AuthState {
   const AuthState();
 }
 
-class AuthStateLoading extends AuthState {
-  const AuthStateLoading();
+class AuthStateUnInitialized extends AuthState {
+  const AuthStateUnInitialized();
 }
 
 class AuthStateLoggedIn extends AuthState {
-  final AuthUser user;
-  const AuthStateLoggedIn(this.user);
+  final AuthUser? user;
+  const AuthStateLoggedIn({required this.user});
 }
 
 class AuthStateNeedsVerification extends AuthState {
-  const AuthStateNeedsVerification();
+  final String email;
+  const AuthStateNeedsVerification({required this.email});
 }
 
-class AuthStateLoggedOut extends AuthState {
+class AuthStateLoggedOut extends AuthState with EquatableMixin {
   final Exception? exception;
-  const AuthStateLoggedOut(this.exception);
+  final bool loading;
+  const AuthStateLoggedOut({required this.exception, required this.loading});
+
+  @override
+  List<Object?> get props => [exception, loading];
 }
 
-class AuthStateRegisterFailure extends AuthState {
-  final Exception exception;
-  const AuthStateRegisterFailure(this.exception);
+class AuthStateInRegisterView extends AuthState {
+  final Exception? exception;
+  final bool loading;
+  const AuthStateInRegisterView(
+      {required this.exception, required this.loading});
 }

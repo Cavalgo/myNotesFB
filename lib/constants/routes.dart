@@ -6,10 +6,6 @@
 */
 
 class MyRoutes {
-  static const String loginView = '/login';
-  static const String registerView = '/register';
-  static const String verifyEmail = '/verifyEmail';
-  static const String notesView = '/notesView';
-  static const String createUpdateNoteView = '/createUpdateNote';
+  static const String createNoteView = '/createUpdateNote';
   static const String updateNoteView = '/updateNote';
 }

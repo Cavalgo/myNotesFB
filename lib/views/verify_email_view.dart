@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:developer';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mynotes/services/auth/auth_service.dart';
-import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
 import 'package:mynotes/services/auth/bloc/auth_event.dart';
 import 'package:mynotes/services/auth/bloc/auth_state.dart';
@@ -21,12 +19,8 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   late Timer verifiedEmailTimer;
   late Timer changeEnableTimer;
   late bool enabled;
-  late AuthService myAuthService;
-  late AuthBloc myAuthBloc;
   @override
   void initState() {
-    /*** FB Service ***/
-    myAuthService = AuthService.firebase();
     enabled = false;
     setEnabledTimer();
     super.initState();
@@ -34,8 +28,8 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
 
   @override
   void dispose() {
-    verifiedEmailTimer;
-    changeEnableTimer;
+    verifiedEmailTimer.cancel();
+    changeEnableTimer.cancel();
     enabled;
     super.dispose();
   }
@@ -49,14 +43,15 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
     });
   }
 
-  sendEmailFunction() {
+  deactivateResendButton(BuildContext context) {
     if (enabled) {
-      return () async {
+      BlocProvider.of<AuthBloc>(context)
+          .add(const AuthEventResendEmailVerification());
+      return () {
         setEnabledTimer();
         setState(() {
           enabled = false;
         });
-        await myAuthService.sendEmailVerification();
       };
     } else {
       return null;
@@ -65,50 +60,51 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
 
   @override
   Widget build(BuildContext context) {
-    myAuthBloc = AuthBloc(myAuthService);
     verifiedEmailTimer =
         Timer.periodic(const Duration(seconds: 3), (verifiedEmailTimer) async {
-      myAuthBloc.add(AuthEventCheckEmailVerified());
+      BlocProvider.of<AuthBloc>(context)
+          .add(const AuthEventCheckEmailVerified());
     });
-    return BlocProvider(
-      create: (context) => myAuthBloc,
-      lazy: false,
-      child: Scaffold(
-          backgroundColor: Colors.amber,
-          appBar: AppBar(
-            backgroundColor: Colors.blue,
-            title: const Text('Verify email'),
-          ),
-          body: BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) async {
-              log('Recieving the state');
-              if (state is AuthStateLoggedIn) {
-                await Navigator.pushNamedAndRemoveUntil(
-                    context, MyRoutes.notesView, (route) => false);
-              }
-            },
-            child: Center(
-              child: Column(
-                children: [
-                  const Text(
-                      'We\'ve sent you a verification email, please verify'),
-                  Text(
-                      'Please, check your email: ${myAuthService.currentUser?.userEmail ?? ''}'),
-                  ElevatedButton(
-                    onPressed: sendEmailFunction(),
-                    child: const Text('Re-send email verification!'),
-                  ),
-                  TextButton(
-                      onPressed: () async {
-                        verifiedEmailTimer.cancel();
-                        await Navigator.pushNamedAndRemoveUntil(
-                            context, MyRoutes.loginView, (route) => false);
-                      },
-                      child: const Text('go back to log-in')),
-                ],
+    return Scaffold(
+      backgroundColor: Colors.amber,
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title: const Text('Verify email'),
+      ),
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) async {
+          if (state is AuthStateLoggedIn) {
+            verifiedEmailTimer.cancel();
+          }
+        },
+        child: Center(
+          child: Column(
+            children: [
+              const Text('We\'ve sent you a verification email, please verify'),
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  if (state is AuthStateNeedsVerification) {
+                    return Text('Please, check your email: ${state.email}');
+                  } else {
+                    return const Text('Please, check your email: ');
+                  }
+                },
               ),
-            ),
-          )),
+              ElevatedButton(
+                onPressed: deactivateResendButton(context),
+                child: const Text('Re-send email verification!'),
+              ),
+              TextButton(
+                  onPressed: () async {
+                    verifiedEmailTimer.cancel();
+                    BlocProvider.of<AuthBloc>(context)
+                        .add(const AuthEventGoToLogIn());
+                  },
+                  child: const Text('go back to log-in')),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

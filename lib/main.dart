@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mynotes/services/auth/auth_exceptions.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
 import 'package:mynotes/services/auth/bloc/auth_event.dart';
 import 'package:mynotes/services/auth/bloc/auth_state.dart';
-import 'package:mynotes/utilities/dialogs/error_dialog.dart';
 import 'package:mynotes/views/notes/create_note_view.dart';
 import 'package:mynotes/views/notes/notes_view.dart';
 import 'package:mynotes/views/login_view.dart';
@@ -28,12 +26,8 @@ void main() {
       child: const HomePage(),
     ),
     routes: {
-      MyRoutes.loginView: (context) => const LogInView(),
-      MyRoutes.registerView: (context) => const RegisterView(),
-      MyRoutes.verifyEmail: (context) => const VerifyEmailView(),
-      MyRoutes.notesView: (context) => const NotesView(),
-      MyRoutes.createUpdateNoteView: (context) => const CreateNoteView(),
-      MyRoutes.updateNoteView: ((context) => const UpdateNoteView()),
+      MyRoutes.createNoteView: (context) => const CreateNoteView(),
+      MyRoutes.updateNoteView: (context) => const UpdateNoteView(),
     },
   ));
 }
@@ -45,7 +39,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
         builder: (BuildContext context, AuthState state) {
-      if (state is AuthStateLoading) {
+      if (state is AuthStateUnInitialized) {
         //Check to do not initilize several times. Create a not initilized state
         BlocProvider.of<AuthBloc>(context).add(const AuthEventInitialize());
         return const Center(child: CircularProgressIndicator());
@@ -53,6 +47,10 @@ class HomePage extends StatelessWidget {
         return const NotesView();
       } else if (state is AuthStateLoggedOut) {
         return const LogInView();
+      } else if (state is AuthStateNeedsVerification) {
+        return const VerifyEmailView();
+      } else if (state is AuthStateInRegisterView) {
+        return const RegisterView();
       } else if (state is AuthStateNeedsVerification) {
         return const VerifyEmailView();
       } else {

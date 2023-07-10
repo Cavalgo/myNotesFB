@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' show immutable;
-import 'package:mynotes/services/auth/bloc/auth_state.dart';
 
 @immutable
 abstract class AuthEvent {
@@ -34,4 +33,18 @@ class AuthEventRegister extends AuthEvent {
   });
 }
 
-class AuthEventCheckEmailVerified extends AuthEvent {}
+class AuthEventGoToRegisterView extends AuthEvent {
+  const AuthEventGoToRegisterView();
+}
+
+class AuthEventGoToLogIn extends AuthEvent {
+  const AuthEventGoToLogIn();
+}
+
+class AuthEventCheckEmailVerified extends AuthEvent {
+  const AuthEventCheckEmailVerified();
+}
+
+class AuthEventResendEmailVerification extends AuthEvent {
+  const AuthEventResendEmailVerification();
+}

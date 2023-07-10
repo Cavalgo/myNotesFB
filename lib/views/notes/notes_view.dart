@@ -60,7 +60,7 @@ class _NotesViewState extends State<NotesView> {
               onPressed: () async {
                 await Navigator.pushNamed(
                   context,
-                  MyRoutes.createUpdateNoteView,
+                  MyRoutes.createNoteView,
                 );
               },
               icon: const Icon(
