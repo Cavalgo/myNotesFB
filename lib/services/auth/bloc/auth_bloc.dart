@@ -5,8 +5,12 @@ import 'package:mynotes/services/auth/bloc/auth_event.dart';
 import 'package:mynotes/services/auth/bloc/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc(AuthProvider myProvider) : super(const AuthStateUnInitialized()) {
+  AuthBloc(AuthProvider myProvider)
+      : super(const AuthStateUnInitialized(
+          loading: true,
+        )) {
     on<AuthEventInitialize>((event, emit) async {
+      emit(const AuthStateUnInitialized(loading: true));
       await myProvider.initialize();
       final AuthUser? user = myProvider.currentUser;
       if (user == null) {
@@ -17,14 +21,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else if (user.isEmailVerfied) {
         emit(AuthStateLoggedIn(
           user: user,
+          loading: false,
         ));
       } else {
         emit(AuthStateNeedsVerification(
-            email: myProvider.currentUser?.userEmail ?? ''));
+            email: myProvider.currentUser?.userEmail ?? '', loading: false));
       }
     });
     on<AuthEventLogIn>((event, emit) async {
-      //To show loading Screen
       emit(const AuthStateLoggedOut(
         exception: null,
         loading: true,
@@ -37,24 +41,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: password,
         );
         //To close the loading screen
-        emit(const AuthStateLoggedOut(
-          exception: null,
-          loading: false,
-        ));
         if (user.isEmailVerfied) {
           emit(AuthStateLoggedIn(
             user: user,
+            loading: false,
           ));
         } else {
           emit(AuthStateNeedsVerification(
-              email: myProvider.currentUser?.userEmail ?? ''));
+              email: myProvider.currentUser?.userEmail ?? '', loading: false));
         }
       } catch (e) {
-        //To close the loading screen
-        emit(const AuthStateLoggedOut(
-          exception: null,
-          loading: false,
-        ));
         if (e is Exception) {
           emit(AuthStateLoggedOut(
             exception: e,
@@ -85,7 +81,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         );
         myProvider.sendEmailVerification();
         emit(AuthStateNeedsVerification(
-            email: myProvider.currentUser?.userEmail ?? ''));
+          email: myProvider.currentUser?.userEmail ?? '',
+          loading: false,
+        ));
       } catch (e) {
         if (e is Exception) {
           emit(AuthStateInRegisterView(
@@ -101,7 +99,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
     on<AuthEventLogOut>((event, emit) async {
-      //emit(AuthStateLoggedIn(user: myProvider.currentUser, exception: exception));
+      //To show loading
+      emit(AuthStateLoggedIn(
+        user: myProvider.currentUser,
+        loading: true,
+      ));
       try {
         await myProvider.logOut();
         emit(const AuthStateLoggedOut(
@@ -138,6 +140,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (myProvider.currentUser?.isEmailVerfied ?? false) {
         emit(AuthStateLoggedIn(
           user: myProvider.currentUser,
+          loading: false,
         ));
       } else {
         emit(state);

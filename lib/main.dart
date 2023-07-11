@@ -1,9 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mynotes/helpers/loading/loading_screen.dart';
+import 'package:mynotes/services/auth/auth_exceptions.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
 import 'package:mynotes/services/auth/bloc/auth_event.dart';
 import 'package:mynotes/services/auth/bloc/auth_state.dart';
+import 'package:mynotes/utilities/dialogs/error_dialog.dart';
 import 'package:mynotes/views/notes/create_note_view.dart';
 import 'package:mynotes/views/notes/notes_view.dart';
 import 'package:mynotes/views/login_view.dart';
@@ -34,13 +39,12 @@ void main() {
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    bool loadingOn = false;
+    return BlocConsumer<AuthBloc, AuthState>(
         builder: (BuildContext context, AuthState state) {
       if (state is AuthStateUnInitialized) {
-        //Check to do not initilize several times. Create a not initilized state
         BlocProvider.of<AuthBloc>(context).add(const AuthEventInitialize());
         return const Center(child: CircularProgressIndicator());
       } else if (state is AuthStateLoggedIn) {
@@ -55,6 +59,48 @@ class HomePage extends StatelessWidget {
         return const VerifyEmailView();
       } else {
         return const Center(child: CircularProgressIndicator());
+      }
+    }, listener: (context, state) {
+      if (state.loading) {
+        loadingOn = true;
+        LoadingScreen.myLoadingScreen
+            .show(context: context, text: state.loadingText);
+      }
+      if (state.loading == false && loadingOn == true) {
+        LoadingScreen.myLoadingScreen.hide();
+        loadingOn = false;
+      }
+      if (state is AuthStateLoggedOut && state.exception != null) {
+        if (state.exception is MyExceptions) {
+          MyExceptions e = state.exception as MyExceptions;
+          showErrorDialog(
+            context,
+            e.reason,
+            e.description,
+          );
+        } else {
+          showErrorDialog(
+            context,
+            GenericAuthException().reason,
+            state.exception.toString(),
+          );
+        }
+      }
+      if (state is AuthStateInRegisterView && state.exception != null) {
+        if (state.exception is MyExceptions) {
+          MyExceptions e = state.exception as MyExceptions;
+          showErrorDialog(
+            context,
+            e.reason,
+            e.description,
+          );
+        } else {
+          showErrorDialog(
+            context,
+            GenericAuthException().reason,
+            state.exception.toString(),
+          );
+        }
       }
     });
   }
